@@ -16,6 +16,8 @@ export interface EntityMention {
   confidence: number;
   /** 提取的关键信息 */
   info?: Record<string, string>;
+  /** 来源文档路径 */
+  sourcePath?: string;
 }
 
 /**
