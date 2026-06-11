@@ -15,9 +15,9 @@ describe('Default Schema', () => {
 
   it('should have relations', () => {
     expect(DEFAULT_SCHEMA.relations).toBeDefined();
-    expect(DEFAULT_SCHEMA.relations['uses']).toBeDefined();
-    expect(DEFAULT_SCHEMA.relations['uses'].from).toBe('System');
-    expect(DEFAULT_SCHEMA.relations['uses'].to).toBe('Concept');
+    expect(DEFAULT_SCHEMA.relations!['uses']).toBeDefined();
+    expect(DEFAULT_SCHEMA.relations!['uses'].from).toBe('System');
+    expect(DEFAULT_SCHEMA.relations!['uses'].to).toBe('Concept');
   });
 
   it('should have at least 8 entity types', () => {
