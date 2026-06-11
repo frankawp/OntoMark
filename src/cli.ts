@@ -45,13 +45,14 @@ program
 program
   .command('link <vault-path>')
   .description('在 wiki 内部生成链接')
+  .option('--wiki-path <path>', '指定 wiki 目录')
   .option('--force', '强制重新处理')
-  .action(async (vaultPath: string, options: { force?: boolean }) => {
+  .action(async (vaultPath: string, options: { wikiPath?: string; force?: boolean }) => {
     try {
       const resolvedVaultPath = path.resolve(vaultPath);
       const ontomark = new OntoMark({
         rawPath: path.join(resolvedVaultPath, 'raw'),
-        wikiPath: path.join(resolvedVaultPath, 'wiki'),
+        wikiPath: options.wikiPath || path.join(resolvedVaultPath, 'wiki'),
         llmProvider: createLLMProvider(),
       });
 
@@ -71,13 +72,14 @@ program
   .command('build <vault-path>')
   .description('完整构建流程: extract + link')
   .option('--raw-path <path>', '指定 raw 目录')
+  .option('--wiki-path <path>', '指定 wiki 目录')
   .option('--force', '强制重新处理')
-  .action(async (vaultPath: string, options: { rawPath?: string; force?: boolean }) => {
+  .action(async (vaultPath: string, options: { rawPath?: string; wikiPath?: string; force?: boolean }) => {
     try {
       const resolvedVaultPath = path.resolve(vaultPath);
       const ontomark = new OntoMark({
         rawPath: options.rawPath || path.join(resolvedVaultPath, 'raw'),
-        wikiPath: path.join(resolvedVaultPath, 'wiki'),
+        wikiPath: options.wikiPath || path.join(resolvedVaultPath, 'wiki'),
         llmProvider: createLLMProvider(),
       });
 
