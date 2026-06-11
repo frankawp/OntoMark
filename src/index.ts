@@ -174,5 +174,7 @@ export * from './index/types';
 export * from './enhance/types';
 export * from './llm/types';
 export * from './utils/errors';
+export * from './wiki/types';
+export * from './extract/types';
 export { DeepSeekProvider } from './llm/deepseek-provider';
 
