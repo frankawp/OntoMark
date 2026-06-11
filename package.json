@@ -1,7 +1,7 @@
 {
   "name": "ontomark",
   "version": "0.1.0",
-  "description": "Ontology-Aware Markdown Enhancer",
+  "description": "Ontology-Aware Markdown Enhancer - 根据本体定义自动增强 Markdown 文档，生成 Obsidian 兼容的知识图谱",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
@@ -16,10 +16,24 @@
     "ontology",
     "markdown",
     "obsidian",
-    "knowledge-graph"
+    "knowledge-graph",
+    "entity-recognition",
+    "llm",
+    "ai"
   ],
   "author": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/frankawp/ontomark.git"
+  },
+  "homepage": "https://github.com/frankawp/ontomark#readme",
+  "bugs": {
+    "url": "https://github.com/frankawp/ontomark/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "devDependencies": {
     "@types/jest": "^29.5.12",
     "@types/node": "^20.11.0",
