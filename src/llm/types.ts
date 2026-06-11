@@ -1,6 +1,7 @@
 // LLM Provider 接口类型定义
 
 import { OntologySchema } from '../schema/types';
+import { ExtractionInput, ExtractionOutput } from '../extract/types';
 
 /**
  * 实体识别输入
@@ -37,4 +38,5 @@ export interface EntityTypeInfoInput {
 export interface LLMProvider {
   recognize(input: RecognizerInput): Promise<RecognizerOutput>;
   inferEntityType?(input: EntityTypeInfoInput): Promise<string>;
+  extract?(input: ExtractionInput): Promise<ExtractionOutput>;
 }

@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { LLMProvider, RecognizerInput, RecognizerOutput, EntityTypeInfoInput } from './types';
+import { ExtractionInput, ExtractionOutput } from '../extract/types';
 
 export interface DeepSeekProviderOptions {
   apiKey: string;
@@ -87,6 +88,68 @@ ${entityTypes}
     } catch (error) {
       console.error('DeepSeek API error:', error);
       return 'Concept';
+    }
+  }
+
+  async extract(input: ExtractionInput): Promise<ExtractionOutput> {
+    const entityTypes = Object.entries(input.schema.entity_types)
+      .map(([k, v]) => {
+        const template = v.template
+          ? `\n    模板字段: ${v.template.info.map(i => i.key).join(', ')}`
+          : '';
+        return `- ${k}: ${v.description}${template}`;
+      })
+      .join('\n');
+
+    const prompt = `你是一个信息提取助手。请从以下文档中提取所有重要实体及其关键信息。
+
+文档文件名：${input.fileName}
+
+实体类型定义：
+${entityTypes}
+
+请以 JSON 格式输出，不要输出其他内容：
+{
+  "entities": [
+    {
+      "name": "实体名称（规范形式）",
+      "aliases": ["别名1", "别名2"],
+      "type": "实体类型",
+      "context": ["相关上下文片段1", "相关上下文片段2"],
+      "confidence": 0.9,
+      "info": {
+        "字段名": "提取的信息"
+      }
+    }
+  ]
+}
+
+待处理文档：
+${input.content}`;
+
+    try {
+      const response = await this.client.chat.completions.create({
+        model: this.model,
+        messages: [{ role: 'user', content: prompt }],
+        response_format: { type: 'json_object' },
+      });
+
+      const content = response.choices[0]?.message?.content || '{"entities": []}';
+      const result = JSON.parse(content);
+
+      return {
+        entities: (result.entities || []).map((e: any) => ({
+          name: e.name,
+          aliases: e.aliases || [],
+          type: e.type,
+          context: e.context || [],
+          confidence: e.confidence || 0.5,
+          info: e.info || {},
+        })),
+      };
+    } catch (error) {
+      console.error('DeepSeek API error:', error);
+      return { entities: [] };
     }
   }
 }
