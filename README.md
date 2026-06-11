@@ -20,6 +20,14 @@ npm install ontomark
 
 ### CLI 使用
 
+首先设置 DeepSeek API Key：
+
+```bash
+export DEEPSEEK_API_KEY=your-api-key
+```
+
+然后运行命令：
+
 ```bash
 # 索引 Vault
 ontomark index ./notes
@@ -37,20 +45,18 @@ ontomark status ./notes
 ### SDK 使用
 
 ```typescript
-import { OntoMark, LLMProvider } from 'ontomark';
+import { OntoMark, DeepSeekProvider } from 'ontomark';
 
-// 实现 LLM Provider
-const myLLMProvider: LLMProvider = {
-  async recognize(input) {
-    // 调用你的 LLM API
-    return { entities: [...] };
-  }
-};
+// 使用 DeepSeek Provider
+const llmProvider = new DeepSeekProvider({
+  apiKey: process.env.DEEPSEEK_API_KEY,
+  model: 'deepseek-chat', // 可选，默认 deepseek-chat
+});
 
 // 创建实例
 const ontomark = new OntoMark({
   vaultPath: './notes',
-  llmProvider: myLLMProvider,
+  llmProvider,
 });
 
 // 构建索引

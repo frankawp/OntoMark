@@ -174,3 +174,5 @@ export * from './index/types';
 export * from './enhance/types';
 export * from './llm/types';
 export * from './utils/errors';
+export { DeepSeekProvider } from './llm/deepseek-provider';
+

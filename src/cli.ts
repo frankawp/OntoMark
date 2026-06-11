@@ -3,6 +3,7 @@
 import { Command } from 'commander';
 import { OntoMark } from './index';
 import { ConflictError } from './utils/errors';
+import { DeepSeekProvider } from './llm/deepseek-provider';
 
 const program = new Command();
 
@@ -18,7 +19,7 @@ program
     try {
       const ontomark = new OntoMark({
         vaultPath,
-        llmProvider: createMockProvider(),
+        llmProvider: createLLMProvider(),
       });
 
       const index = await ontomark.buildIndex();
@@ -41,7 +42,7 @@ program
     try {
       const ontomark = new OntoMark({
         vaultPath: process.cwd(),
-        llmProvider: createMockProvider(),
+        llmProvider: createLLMProvider(),
       });
 
       await ontomark.buildIndex();
@@ -74,7 +75,7 @@ program
     try {
       const ontomark = new OntoMark({
         vaultPath: vaultPath || process.cwd(),
-        llmProvider: createMockProvider(),
+        llmProvider: createLLMProvider(),
       });
 
       console.log('\n批量增强开始...');
@@ -101,7 +102,7 @@ program
     try {
       const ontomark = new OntoMark({
         vaultPath: vaultPath || process.cwd(),
-        llmProvider: createMockProvider(),
+        llmProvider: createLLMProvider(),
       });
 
       await ontomark.buildIndex();
@@ -117,13 +118,22 @@ program
     }
   });
 
-// Mock LLM provider for CLI (用户应该集成自己的 LLM provider)
-function createMockProvider() {
-  return {
-    recognize: async () => ({
-      entities: [],
-    }),
-  };
+// 创建 LLM provider
+function createLLMProvider() {
+  const apiKey = process.env.DEEPSEEK_API_KEY;
+
+  if (!apiKey) {
+    console.warn('警告: 未设置 DEEPSEEK_API_KEY 环境变量，将不会进行实体识别');
+    console.warn('请设置: export DEEPSEEK_API_KEY=your-api-key');
+    return {
+      recognize: async () => ({ entities: [] }),
+    };
+  }
+
+  return new DeepSeekProvider({
+    apiKey,
+    model: 'deepseek-chat',
+  });
 }
 
 program.parse();
