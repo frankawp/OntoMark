@@ -440,17 +440,23 @@ export class OntoMark {
     if (!this.rawPath) return [];
 
     const files: string[] = [];
-    try {
-      const entries = await fs.readdir(this.rawPath, { withFileTypes: true });
-      for (const entry of entries) {
-        if (entry.isFile() && entry.name.endsWith('.md')) {
-          files.push(path.join(this.rawPath, entry.name));
+    const scanDir = async (dirPath: string): Promise<void> => {
+      try {
+        const entries = await fs.readdir(dirPath, { withFileTypes: true });
+        for (const entry of entries) {
+          const fullPath = path.join(dirPath, entry.name);
+          if (entry.isFile() && entry.name.endsWith('.md')) {
+            files.push(fullPath);
+          } else if (entry.isDirectory()) {
+            await scanDir(fullPath);
+          }
         }
+      } catch (error) {
+        // 目录不存在或读取失败
       }
-    } catch (error) {
-      // 目录不存在或读取失败
-    }
+    };
 
+    await scanDir(this.rawPath);
     return files;
   }
 
