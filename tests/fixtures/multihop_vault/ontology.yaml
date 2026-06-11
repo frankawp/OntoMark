@@ -1,0 +1,29 @@
+version: "1.0"
+entity_types:
+  Person:
+    description: 人物
+    template:
+      summary: "一句话简介"
+      info:
+        - key: "职业/身份"
+        - key: "所属组织"
+  Organization:
+    description: 组织
+    template:
+      summary: "一句话简介"
+      info:
+        - key: "行业"
+        - key: "关键人物"
+  Event:
+    description: 事件
+    template:
+      summary: "一句话简介"
+      info:
+        - key: "时间"
+        - key: "关键人物"
+  Concept:
+    description: 概念
+    template:
+      summary: "一句话简介"
+      info:
+        - key: "领域"
