@@ -12,7 +12,12 @@
     "test": "jest",
     "test:watch": "jest --watch"
   },
-  "keywords": ["ontology", "markdown", "obsidian", "knowledge-graph"],
+  "keywords": [
+    "ontology",
+    "markdown",
+    "obsidian",
+    "knowledge-graph"
+  ],
   "author": "",
   "license": "MIT",
   "devDependencies": {
@@ -25,6 +30,7 @@
   "dependencies": {
     "commander": "^12.0.0",
     "gray-matter": "^4.0.3",
-    "marked": "^12.0.0"
+    "marked": "^12.0.0",
+    "yaml": "^2.9.0"
   }
 }

@@ -1,0 +1,10 @@
+version: "1.0"
+entity_types:
+  Concept:
+    description: 技术概念
+  System:
+    description: 系统
+relations:
+  uses:
+    from: System
+    to: Concept

@@ -1,0 +1,8 @@
+version: "1.0"
+entity_types:
+  Concept:
+    description: 技术概念
+relations:
+  uses:
+    from: NonExistent
+    to: Concept
