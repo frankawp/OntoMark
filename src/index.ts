@@ -16,6 +16,20 @@ import { WikiIndexBuilder } from './wiki/index-builder';
 import { md5 } from './utils/md5';
 
 /**
+ * V1 API 已废弃
+ *
+ * 请使用 V2 API:
+ *
+ * const ontomark = new OntoMark({
+ *   rawPath: './raw',
+ *   wikiPath: './wiki',
+ *   llmProvider: provider,
+ * });
+ *
+ * @deprecated V1 API 将在 2026-12-11 后移除
+ */
+
+/**
  * V2 API 配置选项
  */
 export interface OntoMarkOptions {
@@ -303,7 +317,10 @@ export class OntoMark {
   // ============== V1 API (向后兼容) ==============
 
   /**
-   * @deprecated 使用 build() 替代
+   * 构建实体索引
+   *
+   * @deprecated 使用 V2 API 的 build() 方法替代
+   * V1 API 将在 2026-12-11 后移除
    */
   async buildIndex(): Promise<EntityIndex> {
     if (!this.vaultPath) {
@@ -335,7 +352,10 @@ export class OntoMark {
   }
 
   /**
-   * @deprecated 使用 link() 替代
+   * 增强单个文件
+   *
+   * @deprecated 使用 V2 API 的 link() 方法替代
+   * V1 API 将在 2026-12-11 后移除
    */
   async enhanceFile(filePath: string): Promise<EnhanceResult> {
     if (!this.schema || !this.index) {
@@ -360,7 +380,10 @@ export class OntoMark {
   }
 
   /**
-   * @deprecated 使用 build() 替代
+   * 批量增强所有文件
+   *
+   * @deprecated 使用 V2 API 的 build() 方法替代
+   * V1 API 将在 2026-12-11 后移除
    */
   async enhanceAll(options?: { dryRun?: boolean; force?: boolean }): Promise<BatchResult> {
     if (!this.schema || !this.index || !this.cache) {
