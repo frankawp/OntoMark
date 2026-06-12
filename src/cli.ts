@@ -14,6 +14,23 @@ program
   .description('Ontology-Aware Markdown Enhancer')
   .version('0.1.0');
 
+// ============== 初始化命令 ==============
+
+program
+  .command('init [path]')
+  .description('初始化 OntoMark 项目结构')
+  .option('--force', '强制覆盖已存在的目录')
+  .action(async (projectPath: string | undefined, options: { force?: boolean }) => {
+    try {
+      const targetPath = projectPath ? path.resolve(projectPath) : process.cwd();
+      await initProject(targetPath, options.force || false);
+      console.log(`\n✓ 项目初始化完成: ${targetPath}`);
+    } catch (error) {
+      console.error('错误:', error instanceof Error ? error.message : error);
+      process.exit(1);
+    }
+  });
+
 // ============== V2 API 命令 ==============
 
 program
@@ -265,6 +282,162 @@ function createLLMProvider() {
     apiKey,
     model: 'deepseek-chat',
   });
+}
+
+// ============== init 命令辅助函数 ==============
+
+async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function getDefaultOntology(): string {
+  return `# OntoMark 实体类型定义
+# 定义项目中的实体类型和属性
+
+entities:
+  - name: Person
+    description: 人物实体
+    properties:
+      - name
+      - title
+      - organization
+
+  - name: Organization
+    description: 组织机构实体
+    properties:
+      - name
+      - type
+      - location
+
+  - name: Concept
+    description: 概念实体
+    properties:
+      - name
+      - definition
+      - category
+
+  - name: Project
+    description: 项目实体
+    properties:
+      - name
+      - status
+      - startDate
+      - endDate
+
+  - name: Technology
+    description: 技术实体
+    properties:
+      - name
+      - category
+      - version
+`;
+}
+
+function getClaudeTemplate(): string {
+  return `# Claude Code 指令
+
+本项目使用 OntoMark 进行知识图谱增强。
+
+## 项目结构
+
+- \`raw/\` - 原始文档目录
+- \`wiki/\` - Wiki 页面目录（自动生成）
+- \`.ontomark/cache/\` - 缓存目录
+- \`ontology.yaml\` - 实体类型定义
+
+## 工作流程
+
+1. 将原始文档放入 \`raw/\` 目录
+2. 运行 \`ontomark extract\` 提取实体
+3. 运行 \`ontomark link\` 生成链接
+4. 或直接运行 \`ontomark build\` 完整构建
+
+## 实体类型
+
+参见 \`ontology.yaml\` 文件定义。
+
+## 规则
+
+- 不要修改 \`wiki/\` 目录中的文件，它们由系统自动生成
+- 在 \`raw/\` 目录中编写原始文档
+- 使用 YAML frontmatter 定义文档元数据
+`;
+}
+
+function getAgentsTemplate(): string {
+  return `# Agent 指令
+
+本项目使用 OntoMark 进行知识图谱管理。
+
+## 核心职责
+
+1. **文档处理**: 将原始文档转换为结构化 Wiki 页面
+2. **实体提取**: 从文档中识别实体并建立关系
+3. **链接生成**: 在 Wiki 页面间建立双向链接
+
+## 工作原则
+
+- 保持 ontology.yaml 的实体定义一致性
+- 确保链接准确，避免歧义
+- 维护知识的完整性和准确性
+
+## 执行流程
+
+\`\`\`
+ontomark init      # 初始化项目
+ontomark extract   # 提取实体
+ontomark link      # 生成链接
+ontomark build     # 完整构建
+ontomark status    # 查看状态
+\`\`\`
+`;
+}
+
+async function initProject(targetPath: string, force: boolean): Promise<void> {
+  // 检查是否已存在 ontology.yaml（表示已初始化）
+  const ontologyPath = path.join(targetPath, 'ontology.yaml');
+  const alreadyInitialized = await fileExists(ontologyPath);
+
+  if (alreadyInitialized && !force) {
+    throw new Error(`目录已存在: ${targetPath}。使用 --force 强制覆盖。`);
+  }
+
+  // 创建目录结构
+  const dirs = [
+    path.join(targetPath, 'raw'),
+    path.join(targetPath, 'wiki'),
+    path.join(targetPath, '.ontomark'),
+    path.join(targetPath, '.ontomark', 'cache'),
+  ];
+
+  for (const dir of dirs) {
+    await fs.mkdir(dir, { recursive: true });
+  }
+
+  // 创建配置文件
+  const files = [
+    { path: path.join(targetPath, 'ontology.yaml'), content: getDefaultOntology() },
+    { path: path.join(targetPath, 'CLAUDE.md'), content: getClaudeTemplate() },
+    { path: path.join(targetPath, 'AGENTS.md'), content: getAgentsTemplate() },
+  ];
+
+  for (const file of files) {
+    await fs.writeFile(file.path, file.content, 'utf-8');
+  }
+
+  console.log('创建目录:');
+  console.log(`  - raw/          (原始文档)`);
+  console.log(`  - wiki/         (Wiki 页面)`);
+  console.log(`  - .ontomark/    (缓存目录)`);
+  console.log('创建文件:');
+  console.log(`  - ontology.yaml (实体类型定义)`);
+  console.log(`  - CLAUDE.md     (Claude Code 指令)`);
+  console.log(`  - AGENTS.md     (Agent 指令)`);
 }
 
 program.parse();
