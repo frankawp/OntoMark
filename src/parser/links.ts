@@ -58,12 +58,18 @@ export function insertWikiLink(
 
 /**
  * 找到所有可链接的文本位置
+ * 优化：合并所有实体名称为单个正则表达式，避免 O(n*m*k) 复杂度
  */
 export function findAllLinkableText(
   content: string,
   entityNames: string[]
 ): LinkInsertPosition[] {
   const positions: LinkInsertPosition[] = [];
+
+  // 边界情况：空数组直接返回
+  if (entityNames.length === 0) {
+    return positions;
+  }
 
   // 找出所有已链接的范围
   const linkedRanges: Array<{ start: number; end: number }> = [];
@@ -75,23 +81,26 @@ export function findAllLinkableText(
     });
   }
 
-  // 找出所有可链接的文本
-  for (const name of entityNames) {
-    const regex = new RegExp(`\\b${escapeRegex(name)}\\b`, 'g');
+  // 按长度排序（长的先匹配，避免短名称误匹配长的子串）
+  const sortedNames = [...entityNames].sort((a, b) => b.length - a.length);
 
-    while ((match = regex.exec(content)) !== null) {
-      const start = match.index;
-      const end = start + match[0].length;
+  // 合并为单个正则表达式
+  const pattern = sortedNames.map(escapeRegex).join('|');
+  const regex = new RegExp(`\\b(${pattern})\\b`, 'g');
 
-      // 检查是否已在链接范围内
-      const isLinked = linkedRanges.some(
-        range => (start >= range.start && start < range.end) ||
-                 (end > range.start && end <= range.end)
-      );
+  while ((match = regex.exec(content)) !== null) {
+    const matchedText = match[1];
+    const start = match.index;
+    const end = start + matchedText.length;
 
-      if (!isLinked) {
-        positions.push({ start, end, text: match[0] });
-      }
+    // 检查是否已在链接范围内
+    const isLinked = linkedRanges.some(
+      range => (start >= range.start && start < range.end) ||
+               (end > range.start && end <= range.end)
+    );
+
+    if (!isLinked) {
+      positions.push({ start, end, text: matchedText });
     }
   }
 
