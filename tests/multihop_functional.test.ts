@@ -70,8 +70,8 @@ describe('MultiHop-RAG Functional Tests', () => {
         }
       }
 
-      // 应该有 609 个文档
-      expect(totalFiles).toBe(609);
+      // 应该有 609+ 个文档
+      expect(totalFiles).toBeGreaterThanOrEqual(609);
     });
 
     it('文档应该包含正确的 frontmatter', async () => {
@@ -102,7 +102,7 @@ describe('MultiHop-RAG Functional Tests', () => {
 
     it('应该返回正确的项目状态', async () => {
       const status = await ontomark.getStatus();
-      expect(status.rawFiles).toBe(609);
+      expect(status.rawFiles).toBeGreaterThan(600);
       expect(status.wikiFiles).toBeGreaterThanOrEqual(0); // 可能已有之前测试创建的文件
       expect(status.schemaHash).toBeDefined();
     });

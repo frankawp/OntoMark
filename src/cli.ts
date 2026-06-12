@@ -79,6 +79,90 @@ program
     }
   });
 
+program
+  .command('lint <project-path>')
+  .description('健康检查 wiki（孤立页面、缺失链接、空页面等）')
+  .option('--raw-path <path>', '指定 raw 目录')
+  .option('--wiki-path <path>', '指定 wiki 目录')
+  .action(async (projectPath: string, options: { rawPath?: string; wikiPath?: string }) => {
+    try {
+      const ontomark = createOntoMark(projectPath, options);
+      const result = await ontomark.lint();
+      console.log('\nWiki 健康检查结果:');
+      console.log(`- 孤立页面: ${result.orphanPages.length}`);
+      if (result.orphanPages.length > 0 && result.orphanPages.length <= 10) {
+        result.orphanPages.forEach(p => console.log(`  - ${p}`));
+      }
+      console.log(`- 缺失链接: ${result.missingLinks.reduce((sum, m) => sum + m.missing.length, 0)}`);
+      console.log(`- 空页面: ${result.emptyPages.length}`);
+      console.log(`- 低置信度: ${result.lowConfidence.length}`);
+      console.log(`- 需审核: ${result.needsReview.length}`);
+      console.log(`\n总计问题: ${result.totalIssues}`);
+    } catch (error) {
+      console.error('错误:', error instanceof Error ? error.message : error);
+      process.exit(1);
+    }
+  });
+
+program
+  .command('stats <project-path>')
+  .description('统计知识库信息')
+  .option('--raw-path <path>', '指定 raw 目录')
+  .option('--wiki-path <path>', '指定 wiki 目录')
+  .action(async (projectPath: string, options: { rawPath?: string; wikiPath?: string }) => {
+    try {
+      const ontomark = createOntoMark(projectPath, options);
+      const result = await ontomark.stats();
+      console.log('\n知识库统计:');
+      console.log(`- Raw 文档: ${result.rawFiles}`);
+      console.log(`- Wiki 页面: ${result.wikiPages}`);
+      console.log(`- 总链接数: ${result.totalLinks}`);
+      console.log(`- 平均链接/页: ${result.avgLinksPerPage}`);
+      console.log(`- 孤立页面: ${result.orphans}`);
+      if (result.lastBuild) {
+        console.log(`- 最后构建: ${result.lastBuild}`);
+      }
+      console.log('\n实体类型分布:');
+      for (const [type, count] of Object.entries(result.entitiesByType).sort((a, b) => b[1] - a[1])) {
+        console.log(`  - ${type}: ${count}`);
+      }
+    } catch (error) {
+      console.error('错误:', error instanceof Error ? error.message : error);
+      process.exit(1);
+    }
+  });
+
+program
+  .command('context <entity-name> <project-path>')
+  .description('获取实体上下文（为 Agent 提供查询）')
+  .option('--raw-path <path>', '指定 raw 目录')
+  .option('--wiki-path <path>', '指定 wiki 目录')
+  .action(async (entityName: string, projectPath: string, options: { rawPath?: string; wikiPath?: string }) => {
+    try {
+      const ontomark = createOntoMark(projectPath, options);
+      const result = await ontomark.context(entityName);
+      if (!result) {
+        console.log(`\n未找到实体: ${entityName}`);
+        process.exit(1);
+      }
+      console.log(`\n# ${result.entity}`);
+      console.log(`类型: ${result.entityType}`);
+      if (result.aliases.length > 0) {
+        console.log(`别名: ${result.aliases.join(', ')}`);
+      }
+      console.log(`\n## 摘要\n${result.summary}`);
+      if (result.relatedEntities.length > 0) {
+        console.log(`\n## 相关实体\n${result.relatedEntities.map(e => `- [[${e}]]`).join('\n')}`);
+      }
+      if (result.sources.length > 0) {
+        console.log(`\n## 来源\n${result.sources.map(s => `- ${s}`).join('\n')}`);
+      }
+    } catch (error) {
+      console.error('错误:', error instanceof Error ? error.message : error);
+      process.exit(1);
+    }
+  });
+
 async function runCommand(
   projectPath: string,
   options: { rawPath?: string; wikiPath?: string; provider?: string },

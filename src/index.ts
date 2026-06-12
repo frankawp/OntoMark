@@ -46,6 +46,34 @@ export interface StatusResult {
   wikiFiles: number;
 }
 
+export interface LintResult {
+  orphanPages: string[];
+  missingLinks: { file: string; missing: string[] }[];
+  emptyPages: string[];
+  lowConfidence: string[];
+  needsReview: string[];
+  totalIssues: number;
+}
+
+export interface StatsResult {
+  rawFiles: number;
+  wikiPages: number;
+  entitiesByType: Record<string, number>;
+  totalLinks: number;
+  avgLinksPerPage: number;
+  orphans: number;
+  lastBuild?: string;
+}
+
+export interface ContextResult {
+  entity: string;
+  entityType: string;
+  aliases: string[];
+  summary: string;
+  relatedEntities: string[];
+  sources: string[];
+}
+
 export class OntoMark {
   private readonly rawPath: string;
   private readonly wikiPath: string;
@@ -209,6 +237,176 @@ export class OntoMark {
       schemaHash: md5(JSON.stringify(this.schema)),
       rawFiles: rawFiles.length,
       wikiFiles: wikiFiles.length,
+    };
+  }
+
+  /**
+   * 健康检查 wiki
+   * - 孤立页面（无入链）
+   * - 缺失的链接
+   * - 空页面
+   * - 低置信度实体
+   * - 需审核页面
+   */
+  async lint(): Promise<LintResult> {
+    await this.ensureSchema();
+    const wikiFiles = await this.scanMarkdown(this.wikiPath);
+    const indexedFiles = new Set(
+      wikiFiles
+        .filter(f => !['index.md', 'log.md', 'AGENT_CONTEXT.md'].includes(path.basename(f)))
+        .map(f => path.basename(f, '.md'))
+    );
+
+    const orphanPages: string[] = [];
+    const missingLinks: { file: string; missing: string[] }[] = [];
+    const emptyPages: string[] = [];
+    const lowConfidence: string[] = [];
+    const needsReview: string[] = [];
+    const inboundLinks = new Map<string, Set<string>>();
+    const allLinkedEntities = new Set<string>();
+
+    for (const file of wikiFiles) {
+      const basename = path.basename(file);
+      if (['index.md', 'log.md', 'AGENT_CONTEXT.md'].includes(basename)) continue;
+
+      const content = await fs.readFile(file, 'utf-8');
+      const parsed = matter(content);
+      const body = parsed.content;
+
+      if (parsed.data.needs_review) {
+        needsReview.push(path.basename(file, '.md'));
+      }
+
+      if (parsed.data.confidence && parsed.data.confidence < 0.5) {
+        lowConfidence.push(path.basename(file, '.md'));
+      }
+
+      const lines = body.trim().split('\n').filter(l => l.trim() && !l.startsWith('#'));
+      if (lines.length < 3) {
+        emptyPages.push(path.basename(file, '.md'));
+      }
+
+      const links = body.match(/\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g) || [];
+      for (const link of links) {
+        const entity = link.slice(2, -2).split('|')[0].trim();
+        allLinkedEntities.add(entity);
+        if (!inboundLinks.has(entity)) {
+          inboundLinks.set(entity, new Set());
+        }
+        inboundLinks.get(entity)!.add(path.basename(file, '.md'));
+      }
+    }
+
+    for (const page of indexedFiles) {
+      if (!inboundLinks.has(page) || inboundLinks.get(page)!.size === 0) {
+        if (!path.basename(page).startsWith('Topics/')) {
+          orphanPages.push(page);
+        }
+      }
+    }
+
+    const referencedNotCreated: string[] = [];
+    for (const entity of allLinkedEntities) {
+      if (!indexedFiles.has(entity)) {
+        referencedNotCreated.push(entity);
+      }
+    }
+
+    if (referencedNotCreated.length > 0) {
+      missingLinks.push({ file: 'global', missing: referencedNotCreated });
+    }
+
+    return {
+      orphanPages,
+      missingLinks,
+      emptyPages,
+      lowConfidence,
+      needsReview,
+      totalIssues: orphanPages.length + referencedNotCreated.length + emptyPages.length + lowConfidence.length + needsReview.length,
+    };
+  }
+
+  /**
+   * 统计知识库信息
+   */
+  async stats(): Promise<StatsResult> {
+    await this.ensureSchema();
+    const rawFiles = await this.scanMarkdown(this.rawPath);
+    const wikiFiles = await this.scanMarkdown(this.wikiPath);
+    const entityFiles = wikiFiles.filter(f => {
+      const basename = path.basename(f);
+      return !['index.md', 'log.md', 'AGENT_CONTEXT.md'].includes(basename);
+    });
+
+    const entitiesByType: Record<string, number> = {};
+    let totalLinks = 0;
+
+    for (const file of entityFiles) {
+      const content = await fs.readFile(file, 'utf-8');
+      const parsed = matter(content);
+      const entityType = parsed.data.entity_type || 'Unknown';
+      entitiesByType[entityType] = (entitiesByType[entityType] || 0) + 1;
+
+      const links = content.match(/\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g) || [];
+      totalLinks += links.length;
+    }
+
+    const avgLinksPerPage = entityFiles.length > 0 ? totalLinks / entityFiles.length : 0;
+    const lintResult = await this.lint();
+
+    let lastBuild: string | undefined;
+    try {
+      const logPath = path.join(this.wikiPath, 'log.md');
+      const logContent = await fs.readFile(logPath, 'utf-8');
+      const lastEntry = logContent.match(/## \[(\d{4}-\d{2}-\d{2})/);
+      if (lastEntry) {
+        lastBuild = lastEntry[1];
+      }
+    } catch {}
+
+    return {
+      rawFiles: rawFiles.length,
+      wikiPages: entityFiles.length,
+      entitiesByType,
+      totalLinks,
+      avgLinksPerPage: Math.round(avgLinksPerPage * 10) / 10,
+      orphans: lintResult.orphanPages.length,
+      lastBuild,
+    };
+  }
+
+  /**
+   * 为 Agent 提供上下文
+   */
+  async context(entityName: string): Promise<ContextResult | null> {
+    await this.ensureSchema();
+    const wikiFiles = await this.scanMarkdown(this.wikiPath);
+    const targetFile = wikiFiles.find(f => {
+      const basename = path.basename(f, '.md');
+      return basename === entityName || basename.includes(entityName);
+    });
+
+    if (!targetFile) return null;
+
+    const content = await fs.readFile(targetFile, 'utf-8');
+    const parsed = matter(content);
+    const body = parsed.content;
+
+    const relatedEntities: string[] = [];
+    const links = body.match(/\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g) || [];
+    for (const link of links.slice(0, 10)) {
+      relatedEntities.push(link.slice(2, -2).split('|')[0].trim());
+    }
+
+    const summary = body.split('\n').slice(0, 10).join('\n').replace(/<!-- ONTOMARK:BEGIN generated -->[\s\S]*?<!-- ONTOMARK:END generated -->/g, '').trim().slice(0, 500);
+
+    return {
+      entity: parsed.data.canonical || entityName,
+      entityType: parsed.data.entity_type || 'Unknown',
+      aliases: parsed.data.aliases || [],
+      summary,
+      relatedEntities: [...new Set(relatedEntities)].slice(0, 5),
+      sources: (parsed.data.sources || []).map((s: any) => path.basename(s.file || s)),
     };
   }
 
