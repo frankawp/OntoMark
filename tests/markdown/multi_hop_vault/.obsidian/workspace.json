@@ -4,17 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "7ea9d827c002c09e",
+        "id": "7f667fb015fc13fc",
         "type": "tabs",
         "children": [
           {
-            "id": "b05b82abf00a7ec5",
+            "id": "8ac781c1e481e880",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "wiki/Locations/Israel.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "新标签页"
+              "title": "Israel"
             }
           }
         ]
@@ -90,6 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "wiki/Locations/Israel.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -99,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "反向链接"
+              "title": "Israel 的反向链接列表"
             }
           },
           {
@@ -108,11 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
+                "file": "wiki/Locations/Israel.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "出链"
+              "title": "Israel 的出链列表"
             }
           },
           {
@@ -150,12 +156,13 @@
             "state": {
               "type": "outline",
               "state": {
+                "file": "wiki/Locations/Israel.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "大纲"
+              "title": "Israel 的大纲"
             }
           }
         ]
@@ -176,38 +183,38 @@
       "bases:新建数据库": false
     }
   },
-  "active": "b05b82abf00a7ec5",
+  "active": "8ac781c1e481e880",
   "lastOpenFiles": [
-    "wiki/index.md",
-    "wiki/log.md",
-    "wiki/Systems/Mossad.md",
-    "wiki/Persons/Younis_Tirawi.md",
-    "wiki/Persons/Tarik_Cyril_Amar.md",
-    "wiki/Persons/Rania_Khalek.md",
-    "wiki/Persons/OSINTtechnical.md",
+    "wiki/Organizations/Mossad.md",
+    "wiki/Organizations/Hamas.md",
     "wiki/Persons/Mjoachim.md",
     "wiki/Persons/Dr_Jaswant_Gandhi.md",
+    "Rania Khalek.md",
+    "wiki/Persons/Rania_Khalek.md",
+    "wiki/Persons/OSINTtechnical.md",
     "wiki/Persons/Benjamin_Netanyahu.md",
-    "wiki/Persons/Ben_Muasya.md",
-    "wiki/Organizations/Mossad.md",
-    "wiki/Organizations/IDF.md",
-    "wiki/Organizations/Hamas.md",
-    "wiki/Locations/Sderot.md",
+    "wiki/log.md",
+    "wiki/Persons/Tarik_Cyril_Amar.md",
+    "wiki/Persons/Younis_Tirawi.md",
+    "wiki/Persons",
     "wiki/Locations/Israel.md",
+    "wiki/Locations",
+    "wiki/Organizations",
+    "wiki/Locations/以色列.md",
+    "raw/business/ASX_rises_after_Wall_Street_gains_on_rate_optimism;_Oil_drops.md",
+    "raw/business/&.md",
+    "wiki/Organizations/哈马斯.md",
+    "wiki/Organizations/摩萨德.md",
+    "&.md",
+    "wiki/Persons/Ben_Muasya.md",
+    "wiki/index.md",
+    "wiki/Systems/Mossad.md",
+    "wiki/Organizations/IDF.md",
+    "wiki/Locations/Sderot.md",
     "wiki/Systems",
     "raw/entertainment/Subtle_as_a_sledgehammer,_a_pop_icon_returns.md",
     "raw/entertainment/How_to_get_Pumpkin_Tickets,_Jack-o’-Head_armor_in_Monster_Hunter_Now’s_Halloween_event.md",
     "raw/entertainment/Can_anyone_survive_Fortnite_as_a_job.md",
-    "raw/entertainment/A_field_guide_to_the_vampire_authors_who_were_probably_vampires.md",
-    "raw/entertainment/‘Is_this_worth_it_’__The_difficult_questions_the_Shameless_founders_have_had_to_ask_each_other.md",
-    "raw/entertainment/'Angels,_demons,_spirits_and_souls_do_exist,'_says_exorcist_priest_who_warns_against_Ouija_board_use.md",
-    "raw/business/The_inside_story_of_Dave_Clark's_tumultuous_last_days_at_Flexport.md",
-    "raw/business/Robot_startups_see_huge_market_in_replacing_human_workers__'We_can_sell_millions_of_humanoids,_billi.md",
-    "raw/business/Israel's_blockade_of_Gaza_means_that_a_region_the_size_of_Philadelphia_faces_a_real_risk_of_starvati.md",
-    "raw/business/Fifth_Third_1.67%_Cash_Back_Card__One_of_the_simplest_cash_back_credit_cards_with_an_above-average_r.md",
-    "wiki/Locations",
-    "wiki/Persons",
-    "wiki/Organizations",
     "wiki/Topics",
     "ontology.yaml",
     "wiki",
