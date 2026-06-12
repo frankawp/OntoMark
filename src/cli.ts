@@ -61,18 +61,29 @@ program
 
 program
   .command('status <project-path>')
-  .description('查看 V2 项目状态')
+  .description('查看项目状态和知识库统计')
   .option('--raw-path <path>', '指定 raw 目录')
   .option('--wiki-path <path>', '指定 wiki 目录')
-  .option('--provider <name>', 'LLM provider (deepseek | openai)', 'deepseek')
-  .action(async (projectPath: string, options: { rawPath?: string; wikiPath?: string; provider?: string }) => {
+  .action(async (projectPath: string, options: { rawPath?: string; wikiPath?: string }) => {
     try {
       const ontomark = createOntoMark(projectPath, options);
       const status = await ontomark.getStatus();
+      const stats = await ontomark.stats();
       console.log('\n项目状态:');
       console.log(`- Raw 文档: ${status.rawFiles}`);
-      console.log(`- Wiki 页面: ${status.wikiFiles}`);
+      console.log(`- Wiki 页面: ${stats.wikiPages}`);
       console.log(`- Schema hash: ${status.schemaHash}`);
+      if (stats.lastBuild) {
+        console.log(`- 最后构建: ${stats.lastBuild}`);
+      }
+      console.log('\n知识库统计:');
+      console.log(`- 总链接数: ${stats.totalLinks}`);
+      console.log(`- 平均链接/页: ${stats.avgLinksPerPage}`);
+      console.log(`- 孤立页面: ${stats.orphans}`);
+      console.log('\n实体类型分布:');
+      for (const [type, count] of Object.entries(stats.entitiesByType).sort((a, b) => b[1] - a[1])) {
+        console.log(`  - ${type}: ${count}`);
+      }
     } catch (error) {
       console.error('错误:', error instanceof Error ? error.message : error);
       process.exit(1);
@@ -98,34 +109,6 @@ program
       console.log(`- 低置信度: ${result.lowConfidence.length}`);
       console.log(`- 需审核: ${result.needsReview.length}`);
       console.log(`\n总计问题: ${result.totalIssues}`);
-    } catch (error) {
-      console.error('错误:', error instanceof Error ? error.message : error);
-      process.exit(1);
-    }
-  });
-
-program
-  .command('stats <project-path>')
-  .description('统计知识库信息')
-  .option('--raw-path <path>', '指定 raw 目录')
-  .option('--wiki-path <path>', '指定 wiki 目录')
-  .action(async (projectPath: string, options: { rawPath?: string; wikiPath?: string }) => {
-    try {
-      const ontomark = createOntoMark(projectPath, options);
-      const result = await ontomark.stats();
-      console.log('\n知识库统计:');
-      console.log(`- Raw 文档: ${result.rawFiles}`);
-      console.log(`- Wiki 页面: ${result.wikiPages}`);
-      console.log(`- 总链接数: ${result.totalLinks}`);
-      console.log(`- 平均链接/页: ${result.avgLinksPerPage}`);
-      console.log(`- 孤立页面: ${result.orphans}`);
-      if (result.lastBuild) {
-        console.log(`- 最后构建: ${result.lastBuild}`);
-      }
-      console.log('\n实体类型分布:');
-      for (const [type, count] of Object.entries(result.entitiesByType).sort((a, b) => b[1] - a[1])) {
-        console.log(`  - ${type}: ${count}`);
-      }
     } catch (error) {
       console.error('错误:', error instanceof Error ? error.message : error);
       process.exit(1);
