@@ -40,6 +40,17 @@ program
   });
 
 program
+  .command('ingest <project-path>')
+  .description('添加源文档并构建 wiki（build 的语义化别名）')
+  .option('--raw-path <path>', '指定 raw 目录')
+  .option('--wiki-path <path>', '指定 wiki 目录')
+  .option('--provider <name>', 'LLM provider (deepseek | openai)', 'deepseek')
+  .option('--update', '仅处理新增/变更文件')
+  .action(async (projectPath: string, options: { rawPath?: string; wikiPath?: string; provider?: string; update?: boolean }) => {
+    await runCommand(projectPath, options, 'build');
+  });
+
+program
   .command('link <project-path>')
   .description('在 wiki 内部生成链接')
   .option('--raw-path <path>', '指定 raw 目录')
