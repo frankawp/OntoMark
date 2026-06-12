@@ -1,0 +1,218 @@
+{
+  "main": {
+    "id": "ade2562f13c8c498",
+    "type": "split",
+    "children": [
+      {
+        "id": "7ea9d827c002c09e",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "b05b82abf00a7ec5",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "6b3078a4601443e8",
+    "type": "split",
+    "children": [
+      {
+        "id": "b3fb70adbd779939",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "6682b73e6685c34e",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "文件列表"
+            }
+          },
+          {
+            "id": "3c4d6e7c26f8d86c",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "搜索"
+            }
+          },
+          {
+            "id": "beac68895c01b0c1",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "书签"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "4234707a37f1757e",
+    "type": "split",
+    "children": [
+      {
+        "id": "bfeee3dbc9980ff5",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "8a9ada19ad11817d",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "反向链接"
+            }
+          },
+          {
+            "id": "b2fe4075b92ace33",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "出链"
+            }
+          },
+          {
+            "id": "8fdfa2280f8e661b",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "标签"
+            }
+          },
+          {
+            "id": "c8e004d9a3a99fdc",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "添加笔记属性"
+            }
+          },
+          {
+            "id": "979507d359faaac5",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "大纲"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:打开快速切换": false,
+      "graph:查看关系图谱": false,
+      "canvas:新建白板": false,
+      "daily-notes:打开/创建今天的日记": false,
+      "templates:插入模板": false,
+      "command-palette:打开命令面板": false,
+      "bases:新建数据库": false
+    }
+  },
+  "active": "b05b82abf00a7ec5",
+  "lastOpenFiles": [
+    "wiki/index.md",
+    "wiki/log.md",
+    "wiki/Systems/Mossad.md",
+    "wiki/Persons/Younis_Tirawi.md",
+    "wiki/Persons/Tarik_Cyril_Amar.md",
+    "wiki/Persons/Rania_Khalek.md",
+    "wiki/Persons/OSINTtechnical.md",
+    "wiki/Persons/Mjoachim.md",
+    "wiki/Persons/Dr_Jaswant_Gandhi.md",
+    "wiki/Persons/Benjamin_Netanyahu.md",
+    "wiki/Persons/Ben_Muasya.md",
+    "wiki/Organizations/Mossad.md",
+    "wiki/Organizations/IDF.md",
+    "wiki/Organizations/Hamas.md",
+    "wiki/Locations/Sderot.md",
+    "wiki/Locations/Israel.md",
+    "wiki/Systems",
+    "raw/entertainment/Subtle_as_a_sledgehammer,_a_pop_icon_returns.md",
+    "raw/entertainment/How_to_get_Pumpkin_Tickets,_Jack-o’-Head_armor_in_Monster_Hunter_Now’s_Halloween_event.md",
+    "raw/entertainment/Can_anyone_survive_Fortnite_as_a_job.md",
+    "raw/entertainment/A_field_guide_to_the_vampire_authors_who_were_probably_vampires.md",
+    "raw/entertainment/‘Is_this_worth_it_’__The_difficult_questions_the_Shameless_founders_have_had_to_ask_each_other.md",
+    "raw/entertainment/'Angels,_demons,_spirits_and_souls_do_exist,'_says_exorcist_priest_who_warns_against_Ouija_board_use.md",
+    "raw/business/The_inside_story_of_Dave_Clark's_tumultuous_last_days_at_Flexport.md",
+    "raw/business/Robot_startups_see_huge_market_in_replacing_human_workers__'We_can_sell_millions_of_humanoids,_billi.md",
+    "raw/business/Israel's_blockade_of_Gaza_means_that_a_region_the_size_of_Philadelphia_faces_a_real_risk_of_starvati.md",
+    "raw/business/Fifth_Third_1.67%_Cash_Back_Card__One_of_the_simplest_cash_back_credit_cards_with_an_above-average_r.md",
+    "wiki/Locations",
+    "wiki/Persons",
+    "wiki/Organizations",
+    "wiki/Topics",
+    "ontology.yaml",
+    "wiki",
+    "raw/science",
+    "raw/health",
+    "raw/technology"
+  ]
+}

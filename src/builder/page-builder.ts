@@ -5,7 +5,7 @@
  */
 import matter from 'gray-matter';
 import { OntologySchema, EntityTemplate } from '../schema/types';
-import { ResolvedEntity } from '../discovery/types';
+import { ResolvedEntity, ResolvedEvent, ResolvedStatement } from '../discovery/types';
 import { BuiltPage, WikiFrontmatter } from './types';
 
 /**
@@ -20,11 +20,9 @@ export class WikiPageBuilder {
   }
 
   /**
-   * 构建完整的 Wiki 页面
-   * @param entity 消歧后的实体
-   * @returns 构建后的页面
+   * 构建实体 Wiki 页面
    */
-  build(entity: ResolvedEntity): BuiltPage {
+  build(entity: ResolvedEntity, existingContent?: string): BuiltPage {
     const entityType = this.schema.entity_types[entity.entityType];
     const template = entityType?.template;
 
@@ -40,7 +38,6 @@ export class WikiPageBuilder {
       last_updated: new Date().toISOString().split('T')[0],
     };
 
-    // 添加可选字段（仅在有值时添加）
     if (entity.aliases.length > 0) {
       frontmatter.aliases = entity.aliases;
     }
@@ -48,10 +45,9 @@ export class WikiPageBuilder {
       frontmatter.needs_review = true;
     }
 
-    // 生成正文
-    const body = this.generateBody(entity, template);
+    const generatedBody = this.generateEntityBody(entity, template);
+    const body = this.mergeWithExistingBody(generatedBody, existingContent);
 
-    // 组合成完整内容（frontmatter + body）
     const content = matter.stringify(body, frontmatter as any);
 
     return {
@@ -65,20 +61,23 @@ export class WikiPageBuilder {
 
   /**
    * 生成页面正文
-   * @param entity 实体
-   * @param template 实体类型模板
-   * @returns 正文内容
    */
-  private generateBody(entity: ResolvedEntity, template?: EntityTemplate): string {
+  private generateEntityBody(entity: ResolvedEntity, template?: EntityTemplate): string {
     const lines: string[] = [];
 
-    // 标题
     lines.push(`# ${entity.canonicalName}`);
     lines.push('');
+    lines.push('<!-- ONTOMARK:BEGIN generated -->');
+    lines.push('');
 
-    // 如果有上下文，添加简介
-    if (entity.sources.length > 0 && entity.sources[0].context) {
-      lines.push(entity.sources[0].context);
+    // 从上下文中提取简介（合并所有上下文）
+    const contexts = entity.sources
+      .map(s => s.context)
+      .filter(Boolean)
+      .join('\n\n');
+
+    if (contexts) {
+      lines.push(contexts);
       lines.push('');
     }
 
@@ -97,7 +96,9 @@ export class WikiPageBuilder {
       lines.push('| 字段 | 值 |');
       lines.push('| --- | --- |');
       for (const field of template.info) {
-        lines.push(`| ${field.key} | *待补充* |`);
+        // 优先使用 entity.info 中的值
+        const value = entity.info?.[field.key] || '*待补充*';
+        lines.push(`| ${field.key} | ${value} |`);
       }
       lines.push('');
     }
@@ -111,22 +112,48 @@ export class WikiPageBuilder {
     }
     lines.push('');
 
+    lines.push('## Referenced By');
+    lines.push('');
+    lines.push('*No backlinks yet.*');
+    lines.push('');
+
+    lines.push('<!-- ONTOMARK:END generated -->');
+    lines.push('');
+
     return lines.join('\n');
   }
 
-  /**
-   * 生成文件路径
-   * @param name 实体名称
-   * @param entityType 实体类型
-   * @returns 文件路径
-   */
+  private mergeWithExistingBody(generatedBody: string, existingContent?: string): string {
+    if (!existingContent) {
+      return generatedBody;
+    }
+
+    const parsed = matter(existingContent);
+    const existingBody = parsed.content.trim();
+    const generatedMatch = generatedBody.match(/<!-- ONTOMARK:BEGIN generated -->[\s\S]*?<!-- ONTOMARK:END generated -->/);
+    const generatedBlock = generatedMatch?.[0] || generatedBody;
+
+    if (!existingBody) {
+      return generatedBody;
+    }
+
+    const withoutManaged = existingBody
+      .replace(/<!-- ONTOMARK:BEGIN generated -->[\s\S]*?<!-- ONTOMARK:END generated -->/g, '')
+      .replace(new RegExp(`^#\\s+${escapeRegex(parsed.data.canonical || '')}\\s*`, 'm'), '')
+      .trim();
+
+    const title = generatedBody.split('\n')[0];
+    return [title, '', generatedBlock, '', withoutManaged].filter(Boolean).join('\n');
+  }
+
   private generateFilePath(name: string, entityType: string): string {
-    // 清理名称：替换空格、移除特殊字符
     const sanitizedName = name
       .replace(/\s+/g, '_')
       .replace(/[^\w\-一-鿿]/g, '');
-
-    // 格式: {entityType}s/{name}.md
     return `${entityType}s/${sanitizedName}.md`;
   }
+}
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

@@ -13,7 +13,7 @@ describe('discovery/types', () => {
         name: 'JWT',
         entityType: 'Concept',
         aliases: ['JSON Web Token'],
-        context: 'JWT is used for authentication',
+        context: ['JWT is used for authentication'],
         confidence: 0.9,
         location: {
           file: 'raw/design.md',

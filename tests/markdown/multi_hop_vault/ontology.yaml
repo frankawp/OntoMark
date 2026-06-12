@@ -1,0 +1,22 @@
+version: "1.0"
+entity_types:
+  # 通用实体类型
+  Person:
+    description: 人物（真实人物、记者、官员等）
+  Organization:
+    description: 组织（公司、机构、政府、军队、政治组织等）
+  Location:
+    description: 地点（城市、国家、地区等）
+  Event:
+    description: 事件（新闻事件、事故、会议等）
+  Concept:
+    description: 抽象概念（政策、理论、趋势等）
+  Topic:
+    description: 主题页/知识地图
+
+  # 软件/技术类型（保留以兼容）
+  System:
+    description: 系统
+  Tool:
+    description: 工具/产品
+relations: {}

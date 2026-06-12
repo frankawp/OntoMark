@@ -34,21 +34,26 @@ describe('SchemaLoader', () => {
 
   describe('loadWithFallback', () => {
     const testVault = path.join(fixturesDir, 'test-vault');
+    const testHome = path.join(fixturesDir, 'test-home');
     const schemaInRoot = path.join(testVault, 'ontology.yaml');
     const schemaInHidden = path.join(testVault, '.ontomark', 'ontology.yaml');
+    const schemaInHome = path.join(testHome, '.ontomark', 'ontology.yaml');
 
     beforeAll(() => {
       fs.mkdirSync(testVault, { recursive: true });
       fs.mkdirSync(path.join(testVault, '.ontomark'), { recursive: true });
+      fs.mkdirSync(path.join(testHome, '.ontomark'), { recursive: true });
     });
 
     afterAll(() => {
       fs.rmSync(testVault, { recursive: true, force: true });
+      fs.rmSync(testHome, { recursive: true, force: true });
     });
 
     afterEach(() => {
       if (fs.existsSync(schemaInRoot)) fs.unlinkSync(schemaInRoot);
       if (fs.existsSync(schemaInHidden)) fs.unlinkSync(schemaInHidden);
+      if (fs.existsSync(schemaInHome)) fs.unlinkSync(schemaInHome);
     });
 
     it('should load from root ontology.yaml first', async () => {
@@ -77,6 +82,16 @@ describe('SchemaLoader', () => {
 
       expect(result.source).toBe('default');
       expect(result.schema.entity_types['Concept']).toBeDefined();
+    });
+
+    it('should load from ~/.ontomark/ontology.yaml before default schema', async () => {
+      fs.writeFileSync(schemaInHome, 'version: "1.0"\nentity_types:\n  Home:\n    description: home\nrelations: {}');
+
+      const loader = new SchemaLoader();
+      const result = await loader.loadWithFallback(testVault, testHome);
+
+      expect(result.source).toBe('home');
+      expect(result.schema.entity_types['Home']).toBeDefined();
     });
   });
 

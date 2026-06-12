@@ -2,6 +2,9 @@ import { execSync } from 'child_process';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
+// CLI 测试需要更长的超时时间（ts-node 编译较慢）
+jest.setTimeout(60000);
+
 describe('cli init', () => {
   const testDir = path.join(__dirname, 'test-init');
   const cliPath = path.join(__dirname, '../../src/cli.ts');
@@ -11,7 +14,7 @@ describe('cli init', () => {
   });
 
   it('应该创建标准目录结构', async () => {
-    execSync(`npx ts-node ${cliPath} init ${testDir}`, { encoding: 'utf-8' });
+    execSync(`npx ts-node ${cliPath} init ${testDir}`, { encoding: 'utf-8', timeout: 30000 });
 
     // 检查目录
     const rawStat = await fs.stat(path.join(testDir, 'raw'));
@@ -35,13 +38,13 @@ describe('cli init', () => {
   });
 
   it('应该创建有效的 ontology.yaml 文件', async () => {
-    execSync(`npx ts-node ${cliPath} init ${testDir}`, { encoding: 'utf-8' });
+    execSync(`npx ts-node ${cliPath} init ${testDir}`, { encoding: 'utf-8', timeout: 30000 });
 
     const ontologyContent = await fs.readFile(path.join(testDir, 'ontology.yaml'), 'utf-8');
 
-    // 验证基本结构
-    expect(ontologyContent).toContain('entities:');
-    expect(ontologyContent).toContain('- name:');
+    // 验证基本结构（V2 格式使用 entity_types）
+    expect(ontologyContent).toContain('entity_types:');
+    expect(ontologyContent).toContain('Concept:');
   });
 
   it('应该拒绝覆盖已存在的目录（无 --force）', async () => {
@@ -51,7 +54,7 @@ describe('cli init', () => {
 
     // 尝试初始化应该失败
     expect(() => {
-      execSync(`npx ts-node ${cliPath} init ${testDir}`, { encoding: 'utf-8' });
+      execSync(`npx ts-node ${cliPath} init ${testDir}`, { encoding: 'utf-8', timeout: 30000 });
     }).toThrow();
   });
 
@@ -61,7 +64,7 @@ describe('cli init', () => {
     await fs.writeFile(path.join(testDir, 'test.txt'), 'existing');
 
     // 使用 --force 初始化
-    execSync(`npx ts-node ${cliPath} init ${testDir} --force`, { encoding: 'utf-8' });
+    execSync(`npx ts-node ${cliPath} init ${testDir} --force`, { encoding: 'utf-8', timeout: 30000 });
 
     // 检查标准结构
     expect(await fs.stat(path.join(testDir, 'raw'))).toBeDefined();
@@ -76,6 +79,7 @@ describe('cli init', () => {
     execSync(`npx ts-node ${cliPath} init`, {
       encoding: 'utf-8',
       cwd: testDir,
+      timeout: 30000,
     });
 
     // 检查当前目录下创建的结构

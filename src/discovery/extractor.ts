@@ -4,10 +4,10 @@ import { OntologySchema } from '../schema/types';
 import { AIProvider } from '../llm/types';
 import { parseMarkdown } from '../parser/ast';
 import { md5 } from '../utils/md5';
-import { EntityMention, ExtractionResult } from './types';
+import { EntityMention, EventMention, StatementMention, ExtractionResult } from './types';
 
 /**
- * EntityExtractor - 从 raw 文档提取实体（V2 增强版）
+ * EntityExtractor - 从 raw 文档提取实体、事件、声明（V2 增强版）
  */
 export class EntityExtractor {
   private schema: OntologySchema;
@@ -19,7 +19,7 @@ export class EntityExtractor {
   }
 
   /**
-   * 从文件提取实体
+   * 从文件提取
    */
   async extractFromFile(filePath: string): Promise<ExtractionResult> {
     const content = await fs.readFile(filePath, 'utf-8');
@@ -27,7 +27,7 @@ export class EntityExtractor {
   }
 
   /**
-   * 从内容提取实体
+   * 从内容提取
    */
   async extractFromContent(
     content: string,
@@ -41,12 +41,15 @@ export class EntityExtractor {
 
     const extraction = await this.aiProvider.extract(text, this.schema);
 
+    // 转换实体
     const entities: EntityMention[] = extraction.entities.map((e) => ({
       name: e.name,
       entityType: e.type,
       aliases: e.aliases,
-      context: e.context[0] || '',
+      context: e.context, // 保留完整上下文数组
       confidence: e.confidence,
+      info: e.info,
+      relations: e.relations,
       location: {
         file: sourceFile,
         line: findLineNumber(content, e.name),
@@ -54,14 +57,48 @@ export class EntityExtractor {
       },
     }));
 
+    // 转换事件
+    const events: EventMention[] = (extraction.events || []).map((ev) => ({
+      name: ev.name,
+      date: ev.date,
+      location: ev.location,
+      participants: ev.participants,
+      description: ev.description,
+      outcome: ev.outcome,
+      context: ev.context,
+      confidence: ev.confidence,
+      locationInfo: {
+        file: sourceFile,
+        line: findLineNumber(content, ev.name),
+      },
+    }));
+
+    // 转换声明
+    const statements: StatementMention[] = (extraction.statements || []).map((s) => ({
+      summary: s.summary,
+      speaker: s.speaker,
+      speakerRole: s.speakerRole,
+      date: s.date,
+      content: s.content,
+      context: s.context,
+      confidence: s.confidence,
+      locationInfo: {
+        file: sourceFile,
+        line: findLineNumber(content, s.speaker),
+      },
+    }));
+
     return {
       entities,
+      events,
+      statements,
+      summary: extraction.summary,
       metadata: { sourceFile, timestamp, hash },
     };
   }
 
   /**
-   * 批量提取实体
+   * 批量提取
    */
   async extractAll(filePaths: string[]): Promise<ExtractionResult[]> {
     const results: ExtractionResult[] = [];
@@ -72,6 +109,8 @@ export class EntityExtractor {
       } catch {
         results.push({
           entities: [],
+          events: [],
+          statements: [],
           metadata: {
             sourceFile: filePath,
             timestamp: new Date().toISOString(),
@@ -85,12 +124,12 @@ export class EntityExtractor {
 }
 
 /**
- * 查找实体名称在文件中的行号
+ * 查找文本在文件中的行号
  */
-function findLineNumber(content: string, name: string): number {
+function findLineNumber(content: string, searchText: string): number {
   const lines = content.split('\n');
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i].includes(name)) {
+    if (lines[i].includes(searchText)) {
       return i + 1;
     }
   }

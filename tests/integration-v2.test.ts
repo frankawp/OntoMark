@@ -1,20 +1,19 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import matter from 'gray-matter';
 import { OntoMark } from '../src/index';
+import { AIProvider } from '../src/llm/types';
 
-describe('Integration: LLM-Wiki Architecture', () => {
+describe('Integration: OntoMark V2 LLM Wiki pipeline', () => {
   const vaultPath = path.join(__dirname, 'fixtures/multihop_vault');
   const rawPath = path.join(vaultPath, 'raw');
   const wikiPath = path.join(vaultPath, 'wiki');
 
-  const mockProvider = {
-    recognize: jest.fn().mockResolvedValue({ entities: [] }),
-    extract: jest.fn().mockImplementation(async (input: any) => {
-      // 模拟提取逻辑
-      const content = input.content;
+  const mockProvider: AIProvider = {
+    extract: jest.fn().mockImplementation(async (text: string) => {
       const entities: any[] = [];
 
-      if (content.includes('FTX')) {
+      if (text.includes('FTX')) {
         entities.push({
           name: 'FTX',
           aliases: [],
@@ -24,7 +23,7 @@ describe('Integration: LLM-Wiki Architecture', () => {
         });
       }
 
-      if (content.includes('Sam Bankman-Fried') || content.includes('SBF')) {
+      if (text.includes('Sam Bankman-Fried') || text.includes('SBF')) {
         entities.push({
           name: 'Sam Bankman-Fried',
           aliases: ['SBF'],
@@ -34,7 +33,7 @@ describe('Integration: LLM-Wiki Architecture', () => {
         });
       }
 
-      if (content.includes('Caroline Ellison')) {
+      if (text.includes('Caroline Ellison')) {
         entities.push({
           name: 'Caroline Ellison',
           aliases: [],
@@ -44,7 +43,7 @@ describe('Integration: LLM-Wiki Architecture', () => {
         });
       }
 
-      if (content.includes('Alameda Research')) {
+      if (text.includes('Alameda Research')) {
         entities.push({
           name: 'Alameda Research',
           aliases: [],
@@ -54,164 +53,98 @@ describe('Integration: LLM-Wiki Architecture', () => {
         });
       }
 
+      if (text.includes('Security/JWT')) {
+        entities.push({
+          name: 'JWT',
+          aliases: [],
+          type: 'Concept',
+          context: ['Security/JWT is ambiguous'],
+          confidence: 0.4,
+        });
+      }
+
       return { entities };
     }),
+    classify: jest.fn().mockResolvedValue({ type: 'Topic', confidence: 0.8 }),
+    generate: jest.fn().mockResolvedValue('Generated summary'),
+    isAvailable: jest.fn().mockResolvedValue(true),
   };
 
   beforeEach(async () => {
-    // 清空 wiki 目录
+    jest.clearAllMocks();
     await fs.rm(wikiPath, { recursive: true, force: true });
+    await fs.rm(path.join(vaultPath, '.ontomark'), { recursive: true, force: true });
     await fs.mkdir(wikiPath, { recursive: true });
   });
 
-  it('should extract entities and create wiki pages', async () => {
-    const ontomark = new OntoMark({
-      rawPath,
-      wikiPath,
-      llmProvider: mockProvider as any,
-    });
-
-    const result = await ontomark.extract();
-
-    expect(result.extractSuccess).toBeGreaterThan(0);
-    expect(result.wikiPages).toBeGreaterThan(0);
-  });
-
-  it('should create index.md', async () => {
-    const ontomark = new OntoMark({
-      rawPath,
-      wikiPath,
-      llmProvider: mockProvider as any,
-    });
-
-    await ontomark.extract();
-
-    const indexPath = path.join(wikiPath, 'index.md');
-    const exists = await fs.access(indexPath).then(() => true).catch(() => false);
-    expect(exists).toBe(true);
-  });
-
-  it('should run full build pipeline', async () => {
-    const ontomark = new OntoMark({
-      rawPath,
-      wikiPath,
-      llmProvider: mockProvider as any,
-    });
+  it('builds typed canonical wiki pages with evidence and generated artifacts', async () => {
+    const ontomark = new OntoMark({ rawPath, wikiPath, aiProvider: mockProvider });
 
     const result = await ontomark.build();
 
-    expect(result.extractSuccess).toBeGreaterThan(0);
-    expect(result.wikiPages).toBeGreaterThan(0);
-  });
-
-  it('should extract entities from multiple documents', async () => {
-    const ontomark = new OntoMark({
-      rawPath,
-      wikiPath,
-      llmProvider: mockProvider as any,
-    });
-
-    const result = await ontomark.extract();
-
-    // 应该处理 2 个文档
     expect(result.extractSuccess).toBe(2);
     expect(result.extractFailed).toBe(0);
+    expect(result.wikiPages).toBeGreaterThanOrEqual(4);
+    expect(result.linksAdded).toBeGreaterThan(0);
 
-    // 应该生成多个 wiki 页面 (FTX, Sam Bankman-Fried, Caroline Ellison, Alameda Research)
-    expect(result.wikiPages).toBeGreaterThanOrEqual(3);
+    const ftxPath = path.join(wikiPath, 'Organizations', 'FTX.md');
+    const ftx = matter(await fs.readFile(ftxPath, 'utf-8'));
+    expect(ftx.data.canonical).toBe('FTX');
+    expect(ftx.data.entity_type).toBe('Organization');
+    expect(ftx.data.status).toBe('canonical');
+    expect(ftx.data.sources.map((s: any) => s.file).sort()).toEqual([
+      path.join(rawPath, 'business/test2.md'),
+      path.join(rawPath, 'technology/test1.md'),
+    ].sort());
+
+    const sbf = await fs.readFile(path.join(wikiPath, 'Persons', 'Sam_Bankman-Fried.md'), 'utf-8');
+    expect(sbf).toContain('aliases:');
+    expect(sbf).toContain('SBF');
+
+    await expect(fs.access(path.join(wikiPath, 'index.md'))).resolves.toBeUndefined();
+    await expect(fs.access(path.join(wikiPath, 'log.md'))).resolves.toBeUndefined();
+    await expect(fs.access(path.join(wikiPath, 'Topics', 'Organization.md'))).resolves.toBeUndefined();
+    await expect(fs.access(path.join(wikiPath, 'AGENT_CONTEXT.md'))).resolves.toBeUndefined();
+
+    const log = await fs.readFile(path.join(wikiPath, 'log.md'), 'utf-8');
+    expect(log).toContain('## [');
+    expect(log).toContain('build |');
+
+    const context = await fs.readFile(path.join(wikiPath, 'AGENT_CONTEXT.md'), 'utf-8');
+    expect(context).toContain('## Entry Points');
+    expect(context).toContain('[[FTX]]');
+
+    const backlinks = await fs.readFile(ftxPath, 'utf-8');
+    expect(backlinks).toContain('## Referenced By');
   });
 
-  it('should merge duplicate entities across documents', async () => {
-    const ontomark = new OntoMark({
-      rawPath,
-      wikiPath,
-      llmProvider: mockProvider as any,
-    });
+  it('preserves user-authored wiki content across rebuilds', async () => {
+    const ontomark = new OntoMark({ rawPath, wikiPath, aiProvider: mockProvider });
+    await ontomark.build();
 
-    const result = await ontomark.extract();
+    const ftxPath = path.join(wikiPath, 'Organizations', 'FTX.md');
+    await fs.appendFile(ftxPath, '\n## Human Notes\n\nKeep this analyst note.\n', 'utf-8');
 
-    // 检查 FTX 实体是否被正确合并
-    const ftxPath = path.join(wikiPath, 'FTX.md');
-    const exists = await fs.access(ftxPath).then(() => true).catch(() => false);
-    expect(exists).toBe(true);
+    await ontomark.build();
 
-    if (exists) {
-      const content = await fs.readFile(ftxPath, 'utf-8');
-      expect(content).toContain('FTX');
+    const content = await fs.readFile(ftxPath, 'utf-8');
+    expect(content).toContain('## Human Notes');
+    expect(content).toContain('Keep this analyst note.');
+  });
+
+  it('writes low-confidence entities as reviewable draft pages', async () => {
+    const extraRaw = path.join(rawPath, 'technology/ambiguous.md');
+    await fs.writeFile(extraRaw, '# Ambiguous\n\nSecurity/JWT needs review.\n', 'utf-8');
+
+    try {
+      const ontomark = new OntoMark({ rawPath, wikiPath, aiProvider: mockProvider });
+      await ontomark.build();
+
+      const jwt = matter(await fs.readFile(path.join(wikiPath, 'Concepts', 'JWT.md'), 'utf-8'));
+      expect(jwt.data.status).toBe('draft');
+      expect(jwt.data.needs_review).toBe(true);
+    } finally {
+      await fs.rm(extraRaw, { force: true });
     }
-
-    // 检查 Sam Bankman-Fried 是否被合并 (包含 SBF 别名)
-    // 文件名使用下划线替换空格
-    const sbfPath = path.join(wikiPath, 'Sam_Bankman-Fried.md');
-    const sbfExists = await fs.access(sbfPath).then(() => true).catch(() => false);
-    expect(sbfExists).toBe(true);
-
-    if (sbfExists) {
-      const content = await fs.readFile(sbfPath, 'utf-8');
-      // 应该包含别名 SBF
-      expect(content).toContain('SBF');
-    }
-  });
-
-  it('should create wiki pages with correct structure', async () => {
-    const ontomark = new OntoMark({
-      rawPath,
-      wikiPath,
-      llmProvider: mockProvider as any,
-    });
-
-    await ontomark.extract();
-
-    // 检查生成的 wiki 页面
-    const files = await fs.readdir(wikiPath);
-    const mdFiles = files.filter(f => f.endsWith('.md') && f !== 'index.md');
-
-    expect(mdFiles.length).toBeGreaterThan(0);
-
-    // 验证至少一个页面的结构
-    for (const file of mdFiles) {
-      const content = await fs.readFile(path.join(wikiPath, file), 'utf-8');
-      // 应该包含 frontmatter
-      expect(content).toMatch(/^---\n/);
-    }
-  });
-
-  it('should handle empty raw directory gracefully', async () => {
-    const emptyRawPath = path.join(__dirname, 'fixtures', 'empty_vault', 'raw');
-    const emptyWikiPath = path.join(__dirname, 'fixtures', 'empty_vault', 'wiki');
-
-    // 创建空目录
-    await fs.mkdir(emptyRawPath, { recursive: true });
-    await fs.mkdir(emptyWikiPath, { recursive: true });
-
-    const ontomark = new OntoMark({
-      rawPath: emptyRawPath,
-      wikiPath: emptyWikiPath,
-      llmProvider: mockProvider as any,
-    });
-
-    const result = await ontomark.extract();
-
-    expect(result.extractSuccess).toBe(0);
-    expect(result.wikiPages).toBe(0);
-    expect(result.extractFailed).toBe(0);
-
-    // 清理
-    await fs.rm(path.join(__dirname, 'fixtures', 'empty_vault'), {
-      recursive: true,
-      force: true,
-    });
-  });
-
-  it('should support vaultPath backward compatibility', async () => {
-    const ontomark = new OntoMark({
-      vaultPath,
-      llmProvider: mockProvider as any,
-    });
-
-    const result = await ontomark.extract();
-
-    expect(result.extractSuccess).toBeGreaterThan(0);
-    expect(result.wikiPages).toBeGreaterThan(0);
   });
 });

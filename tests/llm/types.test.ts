@@ -1,7 +1,7 @@
 // tests/llm/types.test.ts
 // Task 1.6 - 测试 AIProvider 统一接口
 
-import { AIProvider, AIProviderConfig, ExtractionResult, EntityExtraction, ClassificationResult } from '../../src/llm/types';
+import { AIProvider, AIProviderConfig, LLMExtractionResult, EntityExtraction, ClassificationResult } from '../../src/llm/types';
 import { OntologySchema } from '../../src/schema/types';
 
 describe('llm/types', () => {
@@ -21,8 +21,8 @@ describe('llm/types', () => {
       expect(provider.isAvailable).toBeDefined();
     });
 
-    it('extract 方法应该返回 ExtractionResult', async () => {
-      const mockResult: ExtractionResult = {
+    it('extract 方法应该返回 LLMExtractionResult', async () => {
+      const mockResult: LLMExtractionResult = {
         entities: [
           {
             name: '测试实体',
@@ -121,9 +121,9 @@ describe('llm/types', () => {
     });
   });
 
-  describe('ExtractionResult interface', () => {
+  describe('LLMExtractionResult interface', () => {
     it('应该包含 entities 数组', () => {
-      const result: ExtractionResult = {
+      const result: LLMExtractionResult = {
         entities: [],
       };
 

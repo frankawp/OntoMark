@@ -1,546 +1,325 @@
-import * as path from 'path';
 import * as fs from 'fs/promises';
+import * as path from 'path';
+import matter from 'gray-matter';
 import { OntologySchema } from './schema/types';
-import { EntityIndex, CacheData } from './index/types';
-import { LLMProvider } from './llm/types';
-import { EnhanceResult } from './enhance/types';
 import { SchemaLoader } from './schema/loader';
-import { VaultScanner } from './index/scanner';
-import { EntityIndexBuilder } from './index/entity-index';
-import { HashCache } from './index/hash-cache';
-import { DocumentEnhancer } from './enhance/enhancer';
-import { EntityExtractor } from './extract/entity-extractor';
-import { EntityMerger } from './extract/entity-merger';
-import { WikiPageBuilder } from './extract/wiki-page-builder';
-import { WikiIndexBuilder } from './wiki/index-builder';
+import { EntityExtractor } from './discovery/extractor';
+import { EntityResolver } from './discovery/resolver';
+import { ResolvedEntity } from './discovery/types';
+import { WikiPageBuilder } from './builder/page-builder';
+import { WikiIndexBuilder } from './builder/index-builder';
+import { LinkBuilder } from './builder/link-builder';
+import { BacklinkBuilder } from './builder/backlink-builder';
+import { TopicBuilder } from './builder/topic-builder';
+import { ContextBuilder } from './builder/context-builder';
+import { LogBuilder } from './builder/log-builder';
+import { AIProvider } from './llm/types';
+import { EntityCache } from './storage/cache';
 import { md5 } from './utils/md5';
+import { OpenAIProvider } from './llm/openai-provider';
 
-/**
- * V1 API 已废弃
- *
- * 请使用 V2 API:
- *
- * const ontomark = new OntoMark({
- *   rawPath: './raw',
- *   wikiPath: './wiki',
- *   llmProvider: provider,
- * });
- *
- * @deprecated V1 API 将在 2026-12-11 后移除
- */
-
-/**
- * V2 API 配置选项
- */
 export interface OntoMarkOptions {
-  /** 源文档目录（V2 API） */
-  rawPath?: string;
-  /** Wiki 输出目录（V2 API） */
-  wikiPath?: string;
-  /** LLM Provider */
-  llmProvider: LLMProvider;
-  /** Schema 路径（可选） */
+  rawPath: string;
+  wikiPath: string;
+  aiProvider: AIProvider;
   schemaPath?: string;
-  /** @deprecated 使用 rawPath 和 wikiPath 替代 */
-  vaultPath?: string;
+  projectPath?: string;
 }
 
-/**
- * V2 API 构建结果
- */
 export interface BuildResult {
-  /** 提取成功数 */
   extractSuccess: number;
-  /** 提取失败数 */
   extractFailed: number;
-  /** 链接成功数 */
   linkSuccess: number;
-  /** 链接失败数 */
   linkFailed: number;
-  /** 生成的 wiki 页面数 */
   wikiPages: number;
+  reviewPages: number;
+  linksAdded: number;
+  topics: number;
 }
 
-/**
- * V1 API 批量结果（向后兼容）
- */
-export interface BatchResult {
-  success: string[];
-  failed: Array<{
-    filePath: string;
-    error: Error;
-  }>;
-}
-
-/**
- * 状态查询结果
- */
 export interface StatusResult {
   totalFiles: number;
   indexedFiles: number;
   pendingFiles: number;
   schemaHash: string;
+  rawFiles: number;
+  wikiFiles: number;
 }
 
-/**
- * OntoMark 主类
- *
- * 支持两种使用方式：
- *
- * V2 API (推荐)：
- * ```typescript
- * const ontomark = new OntoMark({
- *   rawPath: './raw',
- *   wikiPath: './wiki',
- *   llmProvider: provider,
- * });
- * await ontomark.build();
- * ```
- *
- * V1 API (向后兼容)：
- * ```typescript
- * const ontomark = new OntoMark({
- *   vaultPath: './vault',
- *   llmProvider: provider,
- * });
- * await ontomark.enhanceAll();
- * ```
- */
 export class OntoMark {
-  // V2 路径
-  private rawPath?: string;
-  private wikiPath?: string;
-
-  // V1 路径（向后兼容）
-  private vaultPath?: string;
-
-  // 共享配置
-  private llmProvider: LLMProvider;
-  private schemaPath?: string;
+  private readonly rawPath: string;
+  private readonly wikiPath: string;
+  private readonly projectPath: string;
+  private readonly aiProvider: AIProvider;
+  private readonly schemaPath?: string;
   private schema?: OntologySchema;
 
-  // V1 内部状态
-  private index?: EntityIndex;
-  private cache?: CacheData;
-  private cachePath?: string;
-
   constructor(options: OntoMarkOptions) {
-    this.llmProvider = options.llmProvider;
+    this.rawPath = path.resolve(options.rawPath);
+    this.wikiPath = path.resolve(options.wikiPath);
+    this.projectPath = path.resolve(options.projectPath || path.dirname(this.rawPath));
+    this.aiProvider = options.aiProvider;
     this.schemaPath = options.schemaPath;
-
-    // V2 API 模式
-    if (options.rawPath && options.wikiPath) {
-      this.rawPath = path.resolve(options.rawPath);
-      this.wikiPath = path.resolve(options.wikiPath);
-    }
-    // V1 API 向后兼容
-    else if (options.vaultPath) {
-      this.vaultPath = path.resolve(options.vaultPath);
-      // 自动推断 raw/wiki 路径
-      this.rawPath = path.join(this.vaultPath, 'raw');
-      this.wikiPath = path.join(this.vaultPath, 'wiki');
-      this.cachePath = path.join(this.vaultPath, '.ontomark', 'cache.json');
-    }
-    else {
-      throw new Error('必须提供 rawPath 和 wikiPath，或提供 vaultPath（向后兼容模式）');
-    }
   }
 
-  // ============== V2 API ==============
-
-  /**
-   * 从 raw 目录提取实体，生成 wiki 页面
-   */
-  async extract(options?: { force?: boolean }): Promise<BuildResult> {
+  async extract(): Promise<BuildResult> {
     await this.ensureSchema();
     await this.ensureDirectories();
 
-    const result: BuildResult = {
-      extractSuccess: 0,
-      extractFailed: 0,
-      linkSuccess: 0,
-      linkFailed: 0,
-      wikiPages: 0,
-    };
+    const rawFiles = await this.scanMarkdown(this.rawPath);
+    const extractor = new EntityExtractor(this.schema!, this.aiProvider);
+    const mentions = [];
+    let extractSuccess = 0;
+    let extractFailed = 0;
 
-    const extractor = new EntityExtractor(this.schema!, this.llmProvider);
-    const merger = new EntityMerger();
-    const pageBuilder = new WikiPageBuilder(this.schema!);
-
-    // 扫描 raw 目录
-    const rawFiles = await this.scanRawFiles();
-
-    // 提取所有文档的实体
-    const allMentions: any[] = [];
     for (const rawFile of rawFiles) {
       try {
-        const extractResult = await extractor.extract(rawFile);
-        if (extractResult.processed) {
-          allMentions.push(...extractResult.entities);
-          result.extractSuccess++;
-        } else {
-          result.extractFailed++;
-        }
-      } catch (error) {
-        result.extractFailed++;
+        const result = await extractor.extractFromFile(rawFile);
+        mentions.push(...result.entities);
+        extractSuccess++;
+      } catch {
+        extractFailed++;
       }
     }
 
-    // 合并实体
-    const mergedEntities = merger.merge(allMentions);
+    const resolver = new EntityResolver();
+    const resolution = resolver.resolve(mentions);
+    const entities = [...resolution.resolved, ...resolution.needsReview];
+    const wikiPages = await this.writePages(entities);
 
-    // 生成 wiki 页面
-    for (const [name, merged] of mergedEntities) {
-      try {
-        const page = await pageBuilder.build(merged);
-        const wikiFilePath = path.join(this.wikiPath!, page.filePath);
-        await fs.writeFile(wikiFilePath, page.content, 'utf-8');
-        result.wikiPages++;
-      } catch (error) {
-        // 页面生成失败
-      }
-    }
+    const indexBuilder = new WikiIndexBuilder(this.wikiPath);
+    await indexBuilder.writeIndexFile();
 
-    // 生成索引
-    if (result.wikiPages > 0) {
-      const indexBuilder = new WikiIndexBuilder(this.wikiPath!);
-      await indexBuilder.writeIndexFile();
-    }
+    const reviewPages = entities.filter(entity => entity.needsReview).length;
+    await new LogBuilder(this.wikiPath).append({
+      action: 'extract',
+      rawFiles: rawFiles.length,
+      wikiPages,
+      reviewPages,
+      linksAdded: 0,
+    });
 
-    return result;
+    return {
+      extractSuccess,
+      extractFailed,
+      linkSuccess: 0,
+      linkFailed: 0,
+      wikiPages,
+      reviewPages,
+      linksAdded: 0,
+      topics: 0,
+    };
   }
 
-  /**
-   * 在 wiki 目录内生成实体链接
-   */
-  async link(options?: { force?: boolean }): Promise<BuildResult> {
+  async link(): Promise<BuildResult> {
     await this.ensureSchema();
     await this.ensureDirectories();
 
-    const result: BuildResult = {
+    const cache = await this.buildCacheFromWiki();
+    const wikiFiles = (await this.scanMarkdown(this.wikiPath))
+      .filter(file => !['index.md', 'log.md', 'AGENT_CONTEXT.md'].includes(path.basename(file)));
+    const linkBuilder = new LinkBuilder(cache);
+    const results = await linkBuilder.processAll(wikiFiles);
+    const linksAdded = results.reduce((sum, result) => sum + result.linksAdded, 0);
+    const linkSuccess = results.filter(result => result.linksAdded > 0).length;
+
+    await new LogBuilder(this.wikiPath).append({
+      action: 'link',
+      rawFiles: 0,
+      wikiPages: wikiFiles.length,
+      reviewPages: 0,
+      linksAdded,
+    });
+
+    return {
       extractSuccess: 0,
       extractFailed: 0,
-      linkSuccess: 0,
+      linkSuccess,
       linkFailed: 0,
-      wikiPages: 0,
+      wikiPages: wikiFiles.length,
+      reviewPages: 0,
+      linksAdded,
+      topics: 0,
     };
+  }
 
-    // 构建 wiki 索引
-    const wikiIndex = await this.buildWikiIndex();
+  async build(): Promise<BuildResult> {
+    await this.ensureSchema();
+    await this.ensureDirectories();
 
-    // 扫描 wiki 文件
-    const wikiFiles = await this.scanWikiFiles();
+    const rawFiles = await this.scanMarkdown(this.rawPath);
+    const extractor = new EntityExtractor(this.schema!, this.aiProvider);
+    const mentions = [];
+    let extractSuccess = 0;
+    let extractFailed = 0;
 
-    // 使用 DocumentEnhancer 处理每个 wiki 文件
-    const enhancer = new DocumentEnhancer(
-      this.wikiPath!,
-      this.schema!,
-      wikiIndex,
-      this.llmProvider
-    );
-
-    for (const wikiFile of wikiFiles) {
+    for (const rawFile of rawFiles) {
       try {
-        await enhancer.enhance(wikiFile);
-        result.linkSuccess++;
-      } catch (error) {
-        result.linkFailed++;
+        const result = await extractor.extractFromFile(rawFile);
+        mentions.push(...result.entities);
+        extractSuccess++;
+      } catch {
+        extractFailed++;
       }
     }
 
-    return result;
-  }
+    const resolver = new EntityResolver();
+    const resolution = resolver.resolve(mentions);
+    const entities = [...resolution.resolved, ...resolution.needsReview];
+    const wikiPages = await this.writePages(entities);
+    const reviewPages = entities.filter(entity => entity.needsReview).length;
 
-  /**
-   * 完整构建流程：extract + link
-   */
-  async build(options?: { force?: boolean }): Promise<BuildResult> {
-    // 先执行提取
-    const extractResult = await this.extract(options);
+    let cache = await this.buildCacheFromEntities(entities);
+    const linkResults = await new LinkBuilder(cache).processAll(await this.entityPagePaths(entities));
+    const linksAdded = linkResults.reduce((sum, result) => sum + result.linksAdded, 0);
+    const linkSuccess = linkResults.filter(result => result.linksAdded > 0).length;
 
-    // 再执行链接
-    const linkResult = await this.link(options);
+    await new BacklinkBuilder(this.wikiPath).build(entities);
+    const topics = await new TopicBuilder(this.wikiPath).build(entities);
+    await new ContextBuilder(this.wikiPath).build(entities);
+    await new WikiIndexBuilder(this.wikiPath).writeIndexFile();
+    await new LogBuilder(this.wikiPath).append({
+      action: 'build',
+      rawFiles: rawFiles.length,
+      wikiPages,
+      reviewPages,
+      linksAdded,
+    });
 
     return {
-      extractSuccess: extractResult.extractSuccess,
-      extractFailed: extractResult.extractFailed,
-      linkSuccess: linkResult.linkSuccess,
-      linkFailed: linkResult.linkFailed,
-      wikiPages: extractResult.wikiPages,
+      extractSuccess,
+      extractFailed,
+      linkSuccess,
+      linkFailed: 0,
+      wikiPages,
+      reviewPages,
+      linksAdded,
+      topics,
     };
   }
 
-  /**
-   * 获取当前状态
-   *
-   * V1 模式：返回 vault 内的文件状态
-   * V2 模式：返回 raw 和 wiki 的文件状态
-   */
-  async getStatus(): Promise<StatusResult & { rawFiles?: number; wikiFiles?: number }> {
-    // V1 模式：使用 VaultScanner
-    if (this.vaultPath) {
-      const scanner = new VaultScanner(this.vaultPath);
-      const files = await scanner.scan();
-      const hashCache = new HashCache(this.cachePath!);
-      const cache = await hashCache.load();
-
-      const pendingFiles = files.filter(file => {
-        const relativePath = path.relative(this.vaultPath!, file);
-        const cached = cache.fileHashes[relativePath];
-        return !cached || !cached.enhanced;
-      });
-
-      return {
-        totalFiles: files.length,
-        indexedFiles: this.index?.entities.size || 0,
-        pendingFiles: pendingFiles.length,
-        schemaHash: cache.schemaHash,
-      };
-    }
-
-    // V2 模式
+  async getStatus(): Promise<StatusResult> {
     await this.ensureSchema();
-
-    const rawFiles = await this.scanRawFiles();
-    const wikiFiles = await this.scanWikiFiles();
-
+    const rawFiles = await this.scanMarkdown(this.rawPath);
+    const wikiFiles = await this.scanMarkdown(this.wikiPath);
     return {
       totalFiles: rawFiles.length,
       indexedFiles: wikiFiles.length,
-      pendingFiles: Math.max(0, rawFiles.length - wikiFiles.length),
+      pendingFiles: 0,
       schemaHash: md5(JSON.stringify(this.schema)),
       rawFiles: rawFiles.length,
       wikiFiles: wikiFiles.length,
     };
   }
 
-  // ============== V1 API (向后兼容) ==============
-
-  /**
-   * 构建实体索引
-   *
-   * @deprecated 使用 V2 API 的 build() 方法替代
-   * V1 API 将在 2026-12-11 后移除
-   */
-  async buildIndex(): Promise<EntityIndex> {
-    if (!this.vaultPath) {
-      throw new Error('V1 API 需要 vaultPath');
-    }
-
-    // 加载 schema
-    const schemaLoader = new SchemaLoader();
-    const schemaResult = await schemaLoader.loadWithFallback(this.vaultPath);
-    this.schema = schemaResult.schema;
-
-    // 扫描 vault
-    const scanner = new VaultScanner(this.vaultPath);
-    const files = await scanner.scan();
-
-    // 构建索引
-    const indexBuilder = new EntityIndexBuilder(this.vaultPath, this.schema);
-    this.index = await indexBuilder.build(files);
-
-    // 加载缓存
-    const hashCache = new HashCache(this.cachePath!);
-    this.cache = await hashCache.load();
-
-    // 更新 schema hash
-    const schemaHash = md5(JSON.stringify(this.schema));
-    hashCache.updateSchemaHash(this.cache, schemaHash);
-
-    return this.index;
-  }
-
-  /**
-   * 增强单个文件
-   *
-   * @deprecated 使用 V2 API 的 link() 方法替代
-   * V1 API 将在 2026-12-11 后移除
-   */
-  async enhanceFile(filePath: string): Promise<EnhanceResult> {
-    if (!this.schema || !this.index) {
-      await this.buildIndex();
-    }
-
-    const enhancer = new DocumentEnhancer(
-      this.vaultPath!,
-      this.schema!,
-      this.index!,
-      this.llmProvider
-    );
-
-    const result = await enhancer.enhance(path.resolve(filePath));
-
-    // 写入增强后的内容
-    if (result.enhanced) {
-      await fs.writeFile(filePath, result.content);
-    }
-
-    return result;
-  }
-
-  /**
-   * 批量增强所有文件
-   *
-   * @deprecated 使用 V2 API 的 build() 方法替代
-   * V1 API 将在 2026-12-11 后移除
-   */
-  async enhanceAll(options?: { dryRun?: boolean; force?: boolean }): Promise<BatchResult> {
-    if (!this.schema || !this.index || !this.cache) {
-      await this.buildIndex();
-    }
-
-    const result: BatchResult = { success: [], failed: [] };
-    const hashCache = new HashCache(this.cachePath!);
-    const scanner = new VaultScanner(this.vaultPath!);
-    const files = await scanner.scan();
-
-    for (const file of files) {
-      try {
-        const fileHash = await this.getFileHash(file);
-        const schemaHash = md5(JSON.stringify(this.schema));
-
-        if (!options?.force && !hashCache.needsEnhancement(file, fileHash, schemaHash, this.cache!)) {
-          continue;
-        }
-
-        const enhanceResult = await this.enhanceFile(file);
-
-        if (enhanceResult.enhanced && !options?.dryRun) {
-          hashCache.updateFileHash(this.cache!, file, fileHash, schemaHash, true);
-        }
-
-        result.success.push(file);
-      } catch (error) {
-        result.failed.push({
-          filePath: file,
-          error: error instanceof Error ? error : new Error(String(error)),
-        });
-
-        // 遇到冲突错误时停止
-        if (error instanceof Error && error.name === 'ConflictError') {
-          break;
-        }
-      }
-    }
-
-    // 保存缓存
-    if (!options?.dryRun) {
-      await hashCache.save(this.cache!);
-    }
-
-    return result;
-  }
-
-  // ============== 私有辅助方法 ==============
-
   private async ensureSchema(): Promise<void> {
     if (this.schema) return;
-
-    const schemaLoader = new SchemaLoader();
-
-    // 尝试从多个位置加载 schema
-    if (this.schemaPath) {
-      const result = await schemaLoader.load(this.schemaPath);
-      this.schema = result.schema;
-    } else if (this.wikiPath) {
-      const result = await schemaLoader.loadWithFallback(this.wikiPath);
-      this.schema = result.schema;
-    } else if (this.vaultPath) {
-      const result = await schemaLoader.loadWithFallback(this.vaultPath);
-      this.schema = result.schema;
-    }
+    const loader = new SchemaLoader();
+    const result = this.schemaPath
+      ? await loader.load(this.schemaPath)
+      : await loader.loadWithFallback(this.projectPath);
+    this.schema = result.schema;
   }
 
   private async ensureDirectories(): Promise<void> {
-    // 确保 wiki 目录存在
-    if (this.wikiPath) {
-      await fs.mkdir(this.wikiPath, { recursive: true });
-    }
+    await fs.mkdir(this.rawPath, { recursive: true });
+    await fs.mkdir(this.wikiPath, { recursive: true });
   }
 
-  private async scanRawFiles(): Promise<string[]> {
-    if (!this.rawPath) return [];
+  private async writePages(entities: ResolvedEntity[]): Promise<number> {
+    const builder = new WikiPageBuilder(this.schema!);
+    let count = 0;
 
-    const files: string[] = [];
-    const scanDir = async (dirPath: string): Promise<void> => {
-      try {
-        const entries = await fs.readdir(dirPath, { withFileTypes: true });
-        for (const entry of entries) {
-          const fullPath = path.join(dirPath, entry.name);
-          if (entry.isFile() && entry.name.endsWith('.md')) {
-            files.push(fullPath);
-          } else if (entry.isDirectory()) {
-            await scanDir(fullPath);
-          }
-        }
-      } catch (error) {
-        // 目录不存在或读取失败
-      }
-    };
-
-    await scanDir(this.rawPath);
-    return files;
-  }
-
-  private async scanWikiFiles(): Promise<string[]> {
-    if (!this.wikiPath) return [];
-
-    const files: string[] = [];
-    try {
-      const entries = await fs.readdir(this.wikiPath, { withFileTypes: true });
-      for (const entry of entries) {
-        if (entry.isFile() && entry.name.endsWith('.md') && entry.name !== 'index.md') {
-          files.push(path.join(this.wikiPath, entry.name));
-        }
-      }
-    } catch (error) {
-      // 目录不存在或读取失败
+    for (const entity of entities) {
+      const draft = builder.build(entity);
+      const filePath = path.join(this.wikiPath, draft.filePath);
+      await fs.mkdir(path.dirname(filePath), { recursive: true });
+      const existing = await fs.readFile(filePath, 'utf-8').catch(() => undefined);
+      const page = builder.build(entity, existing);
+      await fs.writeFile(filePath, page.content, 'utf-8');
+      count++;
     }
 
-    return files;
+    return count;
   }
 
-  private async buildWikiIndex(): Promise<EntityIndex> {
-    const wikiFiles = await this.scanWikiFiles();
+  private async entityPagePaths(entities: ResolvedEntity[]): Promise<string[]> {
+    const builder = new WikiPageBuilder(this.schema!);
+    return entities.map(entity => path.join(this.wikiPath, builder.build(entity).filePath));
+  }
 
-    // 简单实现：从 wiki 文件名构建索引
-    const index: EntityIndex = {
+  private async buildCacheFromEntities(entities: ResolvedEntity[]): Promise<EntityCache> {
+    const builder = new WikiPageBuilder(this.schema!);
+    const cache: EntityCache = {
       entities: new Map(),
-      aliasIndex: new Map(),
-      headingIndex: new Map(),
-      blockIndex: new Map(),
+      aliases: new Map(),
+      lastScan: new Date().toISOString(),
+      schemaHash: md5(JSON.stringify(this.schema)),
     };
 
-    for (const file of wikiFiles) {
-      const fileName = path.basename(file, '.md');
-      index.entities.set(fileName, {
-        fileName,
-        filePath: file,
-        entityType: 'Concept', // 默认类型
-        aliases: [],
-        headings: [],
-        blocks: [],
-        fileHash: '',
+    for (const entity of entities) {
+      const page = builder.build(entity);
+      cache.entities.set(entity.canonicalName, {
+        name: entity.canonicalName,
+        entityType: entity.entityType,
+        sources: entity.sources.map(source => ({ path: source.file, hash: '' })),
+        wikiPagePath: page.filePath,
+        hash: '',
       });
-      index.aliasIndex.set(fileName.toLowerCase(), [fileName]);
+      for (const alias of entity.aliases) {
+        cache.aliases.set(alias, entity.canonicalName);
+      }
     }
 
-    return index;
+    return cache;
   }
 
-  private async getFileHash(filePath: string): Promise<string> {
-    const content = await fs.readFile(filePath, 'utf-8');
-    return md5(content);
+  private async buildCacheFromWiki(): Promise<EntityCache> {
+    const files = await this.scanMarkdown(this.wikiPath);
+    const cache: EntityCache = {
+      entities: new Map(),
+      aliases: new Map(),
+      lastScan: new Date().toISOString(),
+      schemaHash: md5(JSON.stringify(this.schema)),
+    };
+
+    for (const file of files) {
+      const parsed = matter(await fs.readFile(file, 'utf-8'));
+      if (!parsed.data.canonical || !parsed.data.entity_type) continue;
+      const relative = path.relative(this.wikiPath, file);
+      cache.entities.set(parsed.data.canonical, {
+        name: parsed.data.canonical,
+        entityType: parsed.data.entity_type,
+        sources: parsed.data.sources || [],
+        wikiPagePath: relative,
+        hash: '',
+      });
+      for (const alias of parsed.data.aliases || []) {
+        cache.aliases.set(alias, parsed.data.canonical);
+      }
+    }
+
+    return cache;
+  }
+
+  private async scanMarkdown(dir: string): Promise<string[]> {
+    const files: string[] = [];
+    const entries = await fs.readdir(dir, { withFileTypes: true }).catch(() => []);
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        files.push(...await this.scanMarkdown(fullPath));
+      } else if (entry.isFile() && entry.name.endsWith('.md')) {
+        files.push(fullPath);
+      }
+    }
+    return files.sort();
   }
 }
 
-// 重导出所有类型
 export * from './schema/types';
-export * from './index/types';
-export * from './enhance/types';
+export * from './discovery/types';
+export * from './builder/types';
 export * from './llm/types';
 export * from './utils/errors';
-export * from './wiki/types';
-export * from './extract/types';
-export { DeepSeekProvider } from './llm/deepseek-provider';
+export { OpenAIProvider } from './llm/openai-provider';

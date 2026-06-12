@@ -48,6 +48,6 @@ export interface OntologySchema {
  */
 export interface SchemaLoadResult {
   schema: OntologySchema;
-  source: 'root' | 'hidden' | 'default';
+  source: 'root' | 'hidden' | 'home' | 'default';
   filePath?: string;
 }

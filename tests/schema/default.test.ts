@@ -15,13 +15,10 @@ describe('Default Schema', () => {
 
   it('should have relations', () => {
     expect(DEFAULT_SCHEMA.relations).toBeDefined();
-    expect(DEFAULT_SCHEMA.relations!['uses']).toBeDefined();
-    expect(DEFAULT_SCHEMA.relations!['uses'].from).toBe('System');
-    expect(DEFAULT_SCHEMA.relations!['uses'].to).toBe('Concept');
   });
 
-  it('should have at least 8 entity types', () => {
+  it('should have at least 10 entity types', () => {
     const entityCount = Object.keys(DEFAULT_SCHEMA.entity_types).length;
-    expect(entityCount).toBeGreaterThanOrEqual(8);
+    expect(entityCount).toBeGreaterThanOrEqual(10);
   });
 });

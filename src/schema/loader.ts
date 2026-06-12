@@ -1,4 +1,5 @@
 import * as fs from 'fs/promises';
+import * as os from 'os';
 import * as path from 'path';
 import * as yaml from 'yaml';
 import { OntologySchema, SchemaLoadResult } from './types';
@@ -19,9 +20,10 @@ export class SchemaLoader {
     };
   }
 
-  async loadWithFallback(vaultPath: string): Promise<SchemaLoadResult> {
-    const rootSchemaPath = path.join(vaultPath, 'ontology.yaml');
-    const hiddenSchemaPath = path.join(vaultPath, '.ontomark', 'ontology.yaml');
+  async loadWithFallback(projectPath: string, homePath: string = os.homedir()): Promise<SchemaLoadResult> {
+    const rootSchemaPath = path.join(projectPath, 'ontology.yaml');
+    const hiddenSchemaPath = path.join(projectPath, '.ontomark', 'ontology.yaml');
+    const homeSchemaPath = path.join(homePath, '.ontomark', 'ontology.yaml');
 
     // Try root ontology.yaml
     try {
@@ -37,6 +39,15 @@ export class SchemaLoader {
       await fs.access(hiddenSchemaPath);
       const result = await this.load(hiddenSchemaPath);
       return { ...result, source: 'hidden' };
+    } catch {
+      // Continue to home fallback
+    }
+
+    // Try ~/.ontomark/ontology.yaml
+    try {
+      await fs.access(homeSchemaPath);
+      const result = await this.load(homeSchemaPath);
+      return { ...result, source: 'home' };
     } catch {
       // Use default
     }

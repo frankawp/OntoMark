@@ -7,6 +7,7 @@ import { EntityCache } from '../storage/cache';
 import { findAllLinkableText, insertAllWikiLinks } from '../parser/links';
 import { LinkResult } from './types';
 import * as fs from 'fs/promises';
+import matter from 'gray-matter';
 
 /**
  * Wiki 链接构建器
@@ -62,8 +63,11 @@ export class LinkBuilder {
    * @returns 添加链接后的内容和统计信息
    */
   addLinks(content: string): { content: string; linksAdded: number } {
-    const positions = findAllLinkableText(content, this.entityNames);
-    const updated = insertAllWikiLinks(content, this.entityNames);
+    const parsed = matter(content);
+    const positions = findAllLinkableText(parsed.content, this.entityNames);
+    const updatedBody = insertAllWikiLinks(parsed.content, this.entityNames);
+    const hasFrontmatter = content.trimStart().startsWith('---');
+    const updated = hasFrontmatter ? matter.stringify(updatedBody, parsed.data) : updatedBody;
 
     return {
       content: updated,

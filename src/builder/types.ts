@@ -32,6 +32,12 @@ export interface WikiFrontmatter {
   needs_review?: boolean;
   /** 最后更新时间（可选） */
   last_updated?: string;
+  /** 发生日期（事件专用） */
+  date?: string;
+  /** 发言人（声明专用） */
+  speaker?: string;
+  /** 发言人角色（声明专用） */
+  speaker_role?: string;
 }
 
 /**

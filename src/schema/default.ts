@@ -3,8 +3,11 @@ import { OntologySchema } from './types';
 export const DEFAULT_SCHEMA: OntologySchema = {
   version: '1.0',
   entity_types: {
+    Topic: {
+      description: '主题页/知识地图',
+    },
     Concept: {
-      description: '技术概念',
+      description: '概念',
     },
     System: {
       description: '系统',
@@ -27,26 +30,9 @@ export const DEFAULT_SCHEMA: OntologySchema = {
     Person: {
       description: '人员',
     },
-    Project: {
-      description: '项目',
+    Tool: {
+      description: '工具',
     },
   },
-  relations: {
-    uses: {
-      from: 'System',
-      to: 'Concept',
-    },
-    implements: {
-      from: 'Component',
-      to: 'Concept',
-    },
-    owns: {
-      from: 'Team',
-      to: 'System',
-    },
-    affects: {
-      from: 'Incident',
-      to: 'System',
-    },
-  },
+  relations: {},
 };

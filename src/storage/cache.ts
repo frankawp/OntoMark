@@ -146,6 +146,27 @@ export class CacheManager {
   }
 
   /**
+   * 检查文件是否已被缓存
+   * @param filePath 文件路径
+   * @returns 是否已在缓存中
+   */
+  async isCached(filePath: string): Promise<boolean> {
+    const cache = await this.load();
+
+    // 检查是否有任何实体使用了该文件作为来源
+    for (const entity of cache.entities.values()) {
+      for (const source of entity.sources) {
+        const sourcePath = source.path || source.file;
+        if (sourcePath === filePath) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  /**
    * 检查是否需要重建
    * @param rawFile 原始文件信息
    * @returns 是否需要重建
@@ -153,18 +174,25 @@ export class CacheManager {
   async needsRebuild(rawFile: RawFileInfo): Promise<boolean> {
     const cache = await this.load();
 
-    // 检查是否有任何实体使用了该文件作为来源
+    let foundMatchingSource = false;
+
+    // 检查所有使用该文件作为来源的实体
     for (const entity of cache.entities.values()) {
       for (const source of entity.sources) {
-        if (source.path === rawFile.path) {
-          // 找到匹配的来源，检查哈希值
-          return source.hash !== rawFile.hash;
+        const sourcePath = source.path || source.file;
+        if (sourcePath === rawFile.path) {
+          foundMatchingSource = true;
+          // 如果任何来源的哈希不匹配，需要重建
+          const sourceHash = source.hash || '';
+          if (sourceHash !== rawFile.hash) {
+            return true;
+          }
         }
       }
     }
 
     // 如果没有找到匹配的来源，说明是新文件或已失效，需要重建
-    return true;
+    return !foundMatchingSource;
   }
 
   /**
