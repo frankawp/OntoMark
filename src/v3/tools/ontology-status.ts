@@ -21,7 +21,8 @@ export async function ontologyStatus(projectPath: string): Promise<OntologyStatu
     const parsed = yaml.parse(content);
     const entityTypes: Record<string, EntityTypeDef> = {};
 
-    if (parsed.entity_types) {
+    // 添加 null 检查，yaml.parse('') 返回 null
+    if (parsed?.entity_types) {
       for (const [name, def] of Object.entries(parsed.entity_types)) {
         entityTypes[name] = def as EntityTypeDef;
       }

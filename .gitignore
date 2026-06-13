@@ -3,3 +3,4 @@ dist/
 coverage/
 .ontomark/
 *.log
+tests/markdown/

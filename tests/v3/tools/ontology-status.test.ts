@@ -49,4 +49,20 @@ entity_types:
     expect(result.hash).toBeDefined();
     expect(result.hash.length).toBe(32); // MD5 hex length
   });
+
+  it('should handle empty yaml file', async () => {
+    await fs.writeFile(path.join(tempDir, 'ontology.yaml'), '');
+
+    const result = await ontologyStatus(tempDir);
+    expect(result.exists).toBe(true);
+    expect(result.entityTypes).toEqual({});
+  });
+
+  it('should handle yaml without entity_types', async () => {
+    await fs.writeFile(path.join(tempDir, 'ontology.yaml'), 'version: "1.0"');
+
+    const result = await ontologyStatus(tempDir);
+    expect(result.exists).toBe(true);
+    expect(result.entityTypes).toEqual({});
+  });
 });
