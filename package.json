@@ -8,6 +8,10 @@
     "ontomark": "./dist/cli.js",
     "ontomark-v3": "./dist/v3/cli.js"
   },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "jest",

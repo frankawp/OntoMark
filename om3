@@ -1,0 +1,2 @@
+#!/bin/bash
+node "$(dirname "$0")/dist/v3/cli.js" "$@"
