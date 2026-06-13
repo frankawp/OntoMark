@@ -5,7 +5,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "ontomark": "./dist/cli.js"
+    "ontomark": "./dist/cli.js",
+    "ontomark-v3": "./dist/v3/cli.js"
   },
   "scripts": {
     "build": "tsc",
