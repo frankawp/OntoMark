@@ -22,31 +22,39 @@ export async function rawStatus(projectPath: string): Promise<RawStatusResult> {
     // 文件不存在，使用空记录
   }
 
-  // 扫描 raw 目录
+  // 递归扫描 raw 目录
   const files: ProcessedFile[] = [];
-  try {
-    const entries = await fs.readdir(rawDir, { withFileTypes: true });
-    for (const entry of entries) {
-      if (entry.isFile() && entry.name.endsWith('.md')) {
-        const filePath = path.join(rawDir, entry.name);
-        const relativePath = `raw/${entry.name}`;
-        const content = await fs.readFile(filePath, 'utf-8');
-        const hash = crypto.createHash('md5').update(content).digest('hex');
 
-        const processed = processedData.files[relativePath];
-        const modified = !processed || processed.hash !== hash;
+  async function scanDir(dir: string, relativePrefix: string): Promise<void> {
+    try {
+      const entries = await fs.readdir(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        const relativePath = `${relativePrefix}${entry.name}`;
 
-        files.push({
-          path: relativePath,
-          lastProcessed: processed?.lastProcessed,
-          hash,
-          modified,
-        });
+        if (entry.isDirectory()) {
+          await scanDir(fullPath, `${relativePath}/`);
+        } else if (entry.isFile() && entry.name.endsWith('.md')) {
+          const content = await fs.readFile(fullPath, 'utf-8');
+          const hash = crypto.createHash('md5').update(content).digest('hex');
+
+          const processed = processedData.files[relativePath];
+          const modified = !processed || processed.hash !== hash;
+
+          files.push({
+            path: relativePath,
+            lastProcessed: processed?.lastProcessed,
+            hash,
+            modified,
+          });
+        }
       }
+    } catch {
+      // 目录不存在或无法访问
     }
-  } catch {
-    // raw 目录不存在
   }
+
+  await scanDir(rawDir, 'raw/');
 
   return {
     files,
