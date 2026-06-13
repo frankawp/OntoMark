@@ -7,6 +7,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import matter from 'gray-matter';
 import { IndexData, IndexEntity } from './types';
+import { normalizeEntityName } from './normalize';
 
 /**
  * 构建实体索引 - 全量重建
@@ -35,15 +36,18 @@ export async function indexBuild(projectPath: string): Promise<IndexData> {
           try {
             const content = await fs.readFile(fullPath, 'utf-8');
             const parsed = matter(content);
-            const canonical = parsed.data.canonical;
+            const canonical = normalizeEntityName(parsed.data.canonical || '');
             const type = parsed.data.entity_type;
-            const entityAliases: string[] = parsed.data.aliases || [];
+            const entityAliases: string[] = (parsed.data.aliases || []).map((a: string) => normalizeEntityName(a));
 
             if (canonical && type) {
               const relativePath = path.relative(wikiDir, fullPath);
               entities[canonical] = { canonical, type, path: relativePath, aliases: entityAliases };
               for (const alias of entityAliases) {
-                aliases[alias] = canonical;
+                const normalizedAlias = normalizeEntityName(alias);
+                if (normalizedAlias) {
+                  aliases[normalizedAlias] = canonical;
+                }
               }
             }
           } catch {

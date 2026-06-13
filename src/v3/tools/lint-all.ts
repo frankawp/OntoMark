@@ -4,6 +4,7 @@ import matter from 'gray-matter';
 import { LintAllResult } from './types';
 import { lintOrphans } from './lint-orphans';
 import { lintMissing } from './lint-missing';
+import { normalizeEntityName } from './normalize';
 
 /**
  * 综合检查
@@ -25,7 +26,7 @@ export async function lintAll(projectPath: string): Promise<LintAllResult> {
           try {
             const content = await fs.readFile(fullPath, 'utf-8');
             const parsed = matter(content);
-            const canonical = parsed.data.canonical;
+            const canonical = normalizeEntityName(parsed.data.canonical || '');
             const bodyText = parsed.content.replace(/\s+/g, '').replace(/#+\s*/g, '');
             if (canonical && bodyText.length < 50) {
               empty.push(canonical);

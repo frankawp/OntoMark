@@ -3,6 +3,7 @@ import * as path from 'path';
 import matter from 'gray-matter';
 import { WikiWriteInput, WikiWriteResult } from './types';
 import { ontologyStatus } from './ontology-status';
+import { normalizeEntityName, normalizeWikiLinksInText } from './normalize';
 
 /**
  * 写入 wiki 页面
@@ -15,7 +16,12 @@ import { ontologyStatus } from './ontology-status';
  * 5. 写入文件
  */
 export async function wikiWrite(input: WikiWriteInput): Promise<WikiWriteResult> {
-  const { projectPath, canonical, type, aliases, info, content, sources, needsReview, isUpdate } = input;
+  const { projectPath, canonical: rawCanonical, type, aliases: rawAliases, info, content: rawContent, sources, needsReview, isUpdate } = input;
+
+  // 规范化名称
+  const canonical = normalizeEntityName(rawCanonical);
+  const aliases = rawAliases?.map(a => normalizeEntityName(a));
+  const content = normalizeWikiLinksInText(rawContent);
 
   const sanitizedName = canonical
     .replace(/\s+/g, '_')

@@ -2,6 +2,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import matter from 'gray-matter';
 import { LintMissingResult, MissingLink } from './types';
+import { normalizeEntityName } from './normalize';
 
 /**
  * 检查缺失链接（引用了不存在的实体）
@@ -25,13 +26,16 @@ export async function lintMissing(projectPath: string): Promise<LintMissingResul
             const canonical = parsed.data.canonical;
 
             if (canonical) {
-              entities.add(canonical);
+              const normalizedCanonical = normalizeEntityName(canonical);
+              entities.add(normalizedCanonical);
               const linkPattern = /\[\[([^\]]+)\]\]/g;
               let match;
               while ((match = linkPattern.exec(parsed.content)) !== null) {
-                const target = match[1];
-                if (!references.has(target)) references.set(target, []);
-                references.get(target)!.push(canonical);
+                const target = normalizeEntityName(match[1]);
+                if (target && !entities.has(target)) {
+                  if (!references.has(target)) references.set(target, []);
+                  references.get(target)!.push(normalizedCanonical);
+                }
               }
             }
           } catch {}
@@ -44,8 +48,9 @@ export async function lintMissing(projectPath: string): Promise<LintMissingResul
 
   const missing: MissingLink[] = [];
   for (const [target, refBy] of references) {
-    if (!entities.has(target)) {
-      missing.push({ entity: target, referencedBy: [...new Set(refBy)] });
+    const normalizedTarget = normalizeEntityName(target);
+    if (!entities.has(normalizedTarget)) {
+      missing.push({ entity: normalizedTarget, referencedBy: [...new Set(refBy)] });
     }
   }
 
