@@ -4,3 +4,5 @@ coverage/
 .ontomark/
 *.log
 tests/markdown/
+raw/
+wiki/

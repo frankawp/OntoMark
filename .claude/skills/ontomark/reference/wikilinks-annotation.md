@@ -71,7 +71,7 @@ Bedard 昨晚打进了两球。
 
 **输出：**
 ```
-[[Connor Bedard]] 昨晚打进了两球。
+[[Connor Bedard|Bedard]] 昨晚打进了两球。
 ```
 
 ### 示例 3：多实体
