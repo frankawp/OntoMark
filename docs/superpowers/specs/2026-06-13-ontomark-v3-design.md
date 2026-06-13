@@ -146,38 +146,52 @@ mark-processed({
   filePath: string
 })
 
-// 更新 .ontomark/processed.json
+// 更新 .ontomark/processed.json，记录文件处理状态
 ```
 
 #### wiki-write
 
 ```typescript
 wiki-write({
-  path: string,           // wiki 文件路径，如 "wiki/Persons/Connor_Bedard.md"
-  canonical: string,      // 规范名称
-  type: string,           // 实体类型
-  aliases?: string[],     // 别名
-  info?: Record<string, string>,  // 结构化信息
-  context?: string[],     // 原始描述
-  sources?: { file: string, line: number }[],
-  needsReview?: boolean,
-  isUpdate: boolean       // true=更新现有, false=新建
+  projectPath: string,       // 项目路径
+  canonical: string,         // 规范名称
+  type: string,              // 实体类型
+  aliases?: string[],        // 别名列表
+  info?: Record<string, string>,  // 已处理的结构化信息
+  content: string,           // 已标注 WikiLinks 的内容（由 Agent 处理）
+  sources: { file: string, line: number }[],  // 来源列表
+  needsReview?: boolean,     // 是否需审核
+  isUpdate: boolean          // true=更新, false=新建
 })
 
-// 内部逻辑：
+// 内部逻辑（仅格式化，不做智能处理）：
 // 1. 验证文件存在状态与 isUpdate 匹配
-// 2. 新建：根据 ontology template 生成完整页面
-// 3. 更新：智能合并（aliases 去重, info 覆盖, context/sources 追加）
-// 4. 保留人工编辑的非托管内容
+// 2. 加载 ontology template，验证 info 字段是否符合定义
+// 3. 生成 frontmatter：
+//    - canonical, entity_type, aliases, sources, needs_review, status
+// 4. 生成 body：
+//    - 新建：标题 + 信息表格（info） + content + 来源表格
+//    - 更新：合并 frontmatter（aliases 去重），追加 content/sources
+// 5. 写入文件到 wiki/{type}s/{canonical}.md
+// 6. 保留人工编辑的非托管内容
 
 // 返回
 {
   success: boolean,
   path: string,
-  created: boolean,
-  merged: boolean
+  created: boolean
 }
+
+// 注意：WikiLinks 标注、别名映射等逻辑由 Agent 在调用前完成
 ```
+
+**Agent 调用 wiki-write 前需要完成：**
+
+1. 调用 `index-query` 查询 content 中提及的实体
+2. 处理实体名称标注：将 "Connor Bedard" 替换为 `[[Connor Bedard]]`
+3. 处理别名映射：将 "Bedard" 替换为 `[[Connor Bedard]]`（使用规范名称）
+4. 构造 `info` 字段（根据 ontology template）
+5. 调用 `wiki-write` 写入
 
 #### index-build
 
@@ -270,14 +284,24 @@ lint-all({
 2. [Tool] raw-status 获取待处理文件
 
 3. 对每个 raw 文件:
-   ├── [LLM Agent] 阅读文档，提取实体
-   └── 对每个实体:
+   ├── [Read] 读取文档内容
+   ├── [LLM Agent] 提取实体（name, type, aliases, info, context）
+   │
+   └── 对每个提取的实体:
        ├── [Tool] index-query 检查是否存在
+       │
        ├── 存在:
        │   ├── [Read] 读取现有页面（强制）
        │   ├── [LLM Agent] 判断合并/冲突
+       │   ├── [LLM Agent] 处理 content 中的 WikiLinks
+       │   │   - 调用 [Tool] index-query 查询相关实体
+       │   │   - 标注实体名称 [[canonical]]
+       │   │   - 别名映射到规范名称
        │   └── [Tool] wiki-write(isUpdate=true)
+       │
        └── 不存在:
+           ├── [Tool] index-query 查询相关实体（用于标注）
+           ├── [LLM Agent] 处理 content 中的 WikiLinks
            └── [Tool] wiki-write(isUpdate=false)
 
 4. [Tool] mark-processed 标记文件已处理
