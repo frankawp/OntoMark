@@ -13,8 +13,8 @@ import { lintAll } from './tools/lint-all';
 const program = new Command();
 
 program
-  .name('ontomark-v3')
-  .description('OntoMark V3 - Atomic CLI Tools')
+  .name('ontomark')
+  .description('OntoMark - Ontology-Driven Knowledge Base Builder')
   .version('3.0.0');
 
 // 文件状态工具
