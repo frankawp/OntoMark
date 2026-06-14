@@ -12,12 +12,14 @@
 ### 第一步：获取上下文
 
 ```
-1. 调用 ontology-status → 获取可用实体类型。
-   如果用来定义实体类型的ontology.yaml不存在的情况：
-      - 则需要你扫描raw/目录，并根据 [ontology.yaml](./reference/ontology.yaml)样例，询问用户这份知识的适用场景。基于用户回答的信息，给出适合目前内容的本体设计建议
-      - 用户确认后，将ontology.yaml写入项目根目录
+1. 调用 ontology-status → 获取可用实体类型
+   如果 ontology.yaml 不存在：
+      - 扫描 raw/ 目录内容
+      - 询问用户知识库的适用场景
+      - 基于 ontology.yaml 样例给出本体设计建议
+      - 用户确认后写入 ontology.yaml
 2. 调用 raw-status → 获取待处理文件列表
-3. 选择一个待处理文件（用户指定或按顺序依次执行）
+3. 选择一个待处理文件（用户指定或按顺序）
 ```
 
 ### 第二步：读取文档
@@ -47,7 +49,7 @@
 
 ```
 5. 调用 index-query → 检查每个实体是否已存在
-6. 对提取的 context 进行 WikiLinks 标注：
+6. 对提取的 content 进行 WikiLinks 标注：
    - 将实体名称替换为 [[canonical]]
    - 别名映射到规范名称
 ```
@@ -56,16 +58,21 @@
 
 ```
 7. 调用 wiki-write → 批量写入所有实体
-   - isUpdate: false（新建）
-   - 传入已标注的 content
-8. 调用 mark-processed → 标记文件已处理
-9. 调用 index-build → 重建索引
+   - 使用 --file 或 --entities 参数
+   - isUpdate: false（新建）或 true（更新）
+   - sources 使用字符串格式：["raw/file.md"]
+8. 检查返回结果中的 failed 项
+   - 成功：action = 'created' 或 'updated'
+   - 失败：error 包含友好提示
+9. 调用 mark-processed → 标记文件已处理
+10. 调用 index-build → 重建索引
 ```
 
 ## 错误处理
 
-- **类型不存在**：提示用户更新 ontology 或选择最接近类型
-- **实体已存在**：询问用户是否更新（参考 [conflict-resolution.md](./reference/conflict-resolution.md)）
+- **类型不存在**：CLI 返回错误包含可用类型列表
+- **实体已存在**：CLI 返回错误提示使用 `isUpdate: true`
+- **实体不存在却要更新**：CLI 返回错误提示使用 `isUpdate: false`
 - **文件已处理**：跳过或询问是否强制重处理
 
 ## 输出报告

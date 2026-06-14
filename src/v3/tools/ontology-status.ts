@@ -1,8 +1,8 @@
 import * as fs from 'fs/promises';
-import * as path from 'path';
 import * as crypto from 'crypto';
 import * as yaml from 'yaml';
 import { OntologyStatusResult, EntityTypeDef } from './types';
+import { getOntologyPath } from './ontology-path';
 
 /**
  * 查询 ontology 状态
@@ -11,9 +11,20 @@ import { OntologyStatusResult, EntityTypeDef } from './types';
  * @returns ontology 状态信息
  */
 export async function ontologyStatus(projectPath: string): Promise<OntologyStatusResult> {
-  const ontologyPath = path.join(projectPath, 'ontology.yaml');
+  const ontologyResult = await getOntologyPath(projectPath);
+  const ontologyPath = ontologyResult.path;
 
   try {
+    if (!ontologyResult.exists) {
+      return {
+        exists: false,
+        path: ontologyPath,
+        hash: '',
+        lastModified: '',
+        entityTypes: {},
+      };
+    }
+
     const content = await fs.readFile(ontologyPath, 'utf-8');
     const hash = crypto.createHash('md5').update(content).digest('hex');
     const stats = await fs.stat(ontologyPath);

@@ -6,6 +6,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import { ProcessedData } from './types';
+import { getOntologyPath } from './ontology-path';
 
 /**
  * 标记文件已处理
@@ -33,6 +34,13 @@ export async function markProcessed(
   // 计算文件哈希
   const fileContent = await fs.readFile(absolutePath, 'utf-8');
   const hash = crypto.createHash('md5').update(fileContent).digest('hex');
+
+  // 计算 ontology.yaml 哈希
+  const ontologyResult = await getOntologyPath(projectPath);
+  if (ontologyResult.exists) {
+    const ontologyContent = await fs.readFile(ontologyResult.path, 'utf-8');
+    data.ontologyHash = crypto.createHash('md5').update(ontologyContent).digest('hex');
+  }
 
   // 更新数据
   data.files[filePath] = {

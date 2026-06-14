@@ -7,19 +7,8 @@ description: Use when building or querying an OntoMark wiki knowledge base. Trig
 
 > 将文档转化为持久化知识库。入口：`/ontomark`
 
-## 安装
-
-```bash
-# 方式 1：全局安装（需要权限）
-sudo npm link
-ontomark --help
-
-# 方式 2：使用快捷脚本（无需安装）
-./ontomark --help
-
-# 方式 3：npx 运行
-npx . --help
-```
+## CLI检查
+- 在执行任何操作前，技能必须检查 `ontomark` CLI 是否已安装并可在当前环境中调用，以及是否具有执行权限。如果没有安装，技能应提示用户安装指南或提供相关链接。
 
 ## 意图识别
 
@@ -48,21 +37,108 @@ npx . --help
 
 调用方式：`ontomark <command> <project-path>` 或 `./ontomark <command> <project-path>`
 
-| 命令 | 用途 |
-|-----|------|
-| `ontology-status` | 获取可用实体类型 |
-| `raw-status` | 获取待处理文件 |
-| `wiki-status` | 获取 wiki 文件状态 |
-| `wiki-write` | 写入 wiki 页面 |
-| `mark-processed` | 标记文件已处理 |
-| `index-build` | 构建实体索引 |
-| `index-query` | 查询实体是否存在 |
-| `lint-all` | 检查 wiki 健康状态 |
+### 状态查询
 
-示例：
 ```bash
-ontomark ontology-status tests/markdown/multi_hop_vault
-ontomark raw-status tests/markdown/multi_hop_vault
-ontomark index-build tests/markdown/multi_hop_vault
-ontomark lint-all tests/markdown/multi_hop_vault
+# 获取可用实体类型
+ontomark ontology-status <project-path>
+# 返回: { exists, path, entityTypes: { Person: {...}, Organization: {...}, ... } }
+
+# 获取待处理文件
+ontomark raw-status <project-path> [--modified <true|false|all>] [--limit <number>]
+# --modified: true=待处理(默认), false=已处理, all=全部
+# --limit: 返回文件数限制(默认10, 0=全部)
+# 返回: { files: [{path, hash, modified}], total, pending, ontologyChanged }
+
+# 获取 wiki 文件状态
+ontomark wiki-status <project-path>
+# 返回: { files: [{path, canonical, type}], total }
+```
+
+**增量处理机制**：
+- `ontologyChanged: true` 表示 ontology.yaml 已变化，所有文件需重新处理
+- `pending` 表示需要处理的文件数量
+- 文件内容变化时 `modified: true`
+
+### Wiki 写入
+
+```bash
+# 批量写入（推荐）
+ontomark wiki-write <project-path> --file entities.json
+ontomark wiki-write <project-path> --entities '[...]'
+
+# 单个写入
+ontomark wiki-write <project-path> \
+  --canonical "实体名称" \
+  --type "Person" \
+  --content "实体描述内容" \
+  --sources '["raw/file.md"]' \
+  --is-update false
+```
+
+**实体格式**：
+```typescript
+interface WikiWriteEntity {
+  canonical: string;        // 规范名称（必需）
+  type: string;              // 实体类型（必需，必须存在于 ontology）
+  content: string;           // 实体描述内容（必需）
+  sources: SourceRef[];      // 来源（必需）
+  aliases?: string[];        // 别名
+  info?: Record<string, string>;  // 关键信息
+  needsReview?: boolean;     // 是否需审核
+  isUpdate: boolean;         // true=更新, false=新建
+}
+
+// sources 支持两种格式：
+type SourceRef = string | { file: string; lines?: number[] };
+// 字符串格式: "raw/file.md"
+// 对象格式: { file: "raw/file.md", lines: [1, 5] }
+```
+
+**返回结果**：
+```typescript
+interface WikiWriteResult {
+  total: number;      // 总数
+  created: number;    // 新建数
+  updated: number;    // 更新数
+  failed: number;     // 失败数
+  results: WikiWriteItemResult[];
+}
+
+interface WikiWriteItemResult {
+  canonical: string;
+  success: boolean;
+  path?: string;
+  action: 'created' | 'updated';
+  error?: string;     // 失败时包含友好提示
+}
+```
+
+### 标记处理
+
+```bash
+# 单个标记
+ontomark mark-processed <project-path> <file-path>
+
+# 批量标记
+ontomark mark-processed <project-path> --files '["raw/a.md","raw/b.md"]'
+```
+
+### 索引操作
+
+```bash
+# 构建实体索引
+ontomark index-build <project-path>
+
+# 查询实体是否存在
+ontomark index-query <project-path> <name>
+ontomark index-query <project-path> <name> --fuzzy  # 模糊匹配
+# 返回: { found, canonical?, type?, path?, aliases? }
+```
+
+### 健康检查
+
+```bash
+ontomark lint-all <project-path>
+# 返回: { orphans, missing, empty, totalIssues }
 ```

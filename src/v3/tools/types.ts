@@ -15,6 +15,8 @@ export interface RawStatusResult {
   files: ProcessedFile[];
   total: number;
   pending: number;
+  ontologyChanged?: boolean;
+  ontologyHash?: string;
 }
 
 // ============ Wiki 状态 ============
@@ -52,13 +54,14 @@ export interface OntologyStatusResult {
 
 // ============ Wiki 写入 ============
 
-export interface SourceRef {
-  file: string;
-  line: number;
-}
+/**
+ * 来源引用 - 支持字符串或对象格式
+ * 字符串格式: "raw/file.md"
+ * 对象格式: { file: "raw/file.md", lines: [1, 5] }
+ */
+export type SourceRef = string | { file: string; lines?: number[] };
 
-export interface WikiWriteInput {
-  projectPath: string;
+export interface WikiWriteEntity {
   canonical: string;
   type: string;
   aliases?: string[];
@@ -69,10 +72,25 @@ export interface WikiWriteInput {
   isUpdate: boolean;
 }
 
-export interface WikiWriteResult {
+export interface WikiWriteInput {
+  projectPath: string;
+  entities: WikiWriteEntity[];
+}
+
+export interface WikiWriteItemResult {
+  canonical: string;
   success: boolean;
-  path: string;
-  created: boolean;
+  path?: string;
+  action: 'created' | 'updated';
+  error?: string;
+}
+
+export interface WikiWriteResult {
+  total: number;
+  created: number;
+  updated: number;
+  failed: number;
+  results: WikiWriteItemResult[];
 }
 
 // ============ 索引 ============
@@ -122,6 +140,7 @@ export interface LintAllResult {
 // ============ 处理状态存储 ============
 
 export interface ProcessedData {
+  ontologyHash?: string;  // ontology.yaml 的 hash
   files: Record<string, {
     lastProcessed: string;
     hash: string;
