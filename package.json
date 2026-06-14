@@ -1,29 +1,27 @@
 {
   "name": "ontomark",
-  "version": "0.1.0",
-  "description": "Ontology-Aware Markdown Enhancer - 根据本体定义自动增强 Markdown 文档，生成 Obsidian 兼容的知识图谱",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "version": "3.0.0",
+  "description": "Ontology-Driven Knowledge Base Builder - 从文档提取实体，构建持久化知识库",
+  "main": "dist/v3/index.js",
+  "types": "dist/v3/index.d.ts",
   "bin": {
-    "ontomark": "./dist/v3/cli.js",
-    "ontomark-v2": "./dist/cli.js"
+    "ontomark": "dist/v3/cli.js"
   },
   "files": [
-    "dist/**/*.js",
-    "dist/**/*.d.ts",
+    "dist/v3/**/*.js",
+    "dist/v3/**/*.d.ts",
     ".claude/skills/**/*"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "npx tsc src/v3/cli.ts src/v3/index.ts src/v3/tools/*.ts --outDir dist/v3 --esModuleInterop --moduleResolution node --module commonjs --skipLibCheck --declaration --target es2020",
     "test": "jest",
     "test:watch": "jest --watch"
   },
   "keywords": [
     "ontology",
     "markdown",
-    "obsidian",
     "knowledge-graph",
-    "entity-recognition",
+    "entity-extraction",
     "llm",
     "ai"
   ],
@@ -50,13 +48,6 @@
   "dependencies": {
     "commander": "^12.0.0",
     "gray-matter": "^4.0.3",
-    "mdast-util-to-string": "^1.1.0",
-    "openai": "^6.42.0",
-    "remark-frontmatter": "^2.0.0",
-    "remark-parse": "^9.0.0",
-    "remark-stringify": "^9.0.1",
-    "unified": "^9.2.2",
-    "unist-util-visit": "^2.0.3",
     "yaml": "^2.9.0"
   }
 }

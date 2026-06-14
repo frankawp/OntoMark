@@ -10,6 +10,7 @@ import { wikiWrite } from './tools/wiki-write';
 import { indexBuild } from './tools/index-build';
 import { indexQuery } from './tools/index-query';
 import { lintAll } from './tools/lint-all';
+import { skillInstall, skillUninstall } from './tools/skill-install';
 import { WikiWriteEntity } from './tools/types';
 
 const program = new Command();
@@ -18,6 +19,21 @@ program
   .name('ontomark')
   .description('OntoMark - Ontology-Driven Knowledge Base Builder')
   .version('3.0.0');
+
+// Skill 安装命令
+program
+  .command('skill-install')
+  .description('安装 Skill 到 Claude Code')
+  .action(async () => {
+    await skillInstall();
+  });
+
+program
+  .command('skill-uninstall')
+  .description('卸载 Claude Code 中的 Skill')
+  .action(async () => {
+    await skillUninstall();
+  });
 
 // 文件状态工具
 program
