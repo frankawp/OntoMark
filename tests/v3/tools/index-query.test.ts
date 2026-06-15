@@ -56,4 +56,35 @@ describe('index-query', () => {
     const result = await indexQuery(tempDir, 'John Doe');
     expect(result.found).toBe(false);
   });
+
+  describe('fuzzy matching', () => {
+    it('should find prefix match', async () => {
+      const result = await indexQuery(tempDir, 'John', true);
+      expect(result.found).toBe(true);
+      expect(result.canonical).toBe('John Doe');
+    });
+
+    it('should prefer exact over prefix match', async () => {
+      const result = await indexQuery(tempDir, 'Jane Doe', true);
+      expect(result.found).toBe(true);
+      expect(result.canonical).toBe('Jane Doe');
+    });
+
+    it('should find case-insensitive match', async () => {
+      const result = await indexQuery(tempDir, 'john doe', true);
+      expect(result.found).toBe(true);
+      expect(result.canonical).toBe('John Doe');
+    });
+
+    it('should return not found for unrelated query', async () => {
+      const result = await indexQuery(tempDir, 'XYZ', true);
+      expect(result.found).toBe(false);
+    });
+
+    it('should match by alias in fuzzy mode', async () => {
+      const result = await indexQuery(tempDir, 'Johnny', true);
+      expect(result.found).toBe(true);
+      expect(result.canonical).toBe('John Doe');
+    });
+  });
 });

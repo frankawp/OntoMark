@@ -43,4 +43,18 @@ describe('lint-missing', () => {
     const result = await lintMissing(tempDir);
     expect(result.missing).toHaveLength(0);
   });
+
+  it('should handle [[target|display]] alias syntax', async () => {
+    const personsDir = path.join(wikiDir, 'Persons');
+    await fs.mkdir(personsDir, { recursive: true });
+    await fs.writeFile(
+      path.join(personsDir, 'Existing.md'),
+      '---\ncanonical: Existing\nentity_type: Person\n---\n# Existing\n\nReferences [[Missing Person|Someone]] and [[Existing|Self]].'
+    );
+
+    const result = await lintMissing(tempDir);
+    expect(result.missing).toHaveLength(1);
+    expect(result.missing[0].entity).toBe('Missing Person');
+    expect(result.missing[0].referencedBy).toContain('Existing');
+  });
 });

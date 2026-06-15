@@ -9,15 +9,26 @@ import { ProcessedData } from './types';
 import { getOntologyPath } from './ontology-path';
 
 /**
- * 标记文件已处理
+ * 标记单个文件已处理
  */
 export async function markProcessed(
   projectPath: string,
   filePath: string
 ): Promise<void> {
+  await markProcessedBatch(projectPath, [filePath]);
+}
+
+/**
+ * 批量标记文件已处理（原子操作，避免并发冲突）
+ */
+export async function markProcessedBatch(
+  projectPath: string,
+  filePaths: string[]
+): Promise<void> {
+  if (filePaths.length === 0) return;
+
   const ontomarkDir = path.join(projectPath, '.ontomark');
   const processedPath = path.join(ontomarkDir, 'processed.json');
-  const absolutePath = path.join(projectPath, filePath);
 
   // 确保目录存在
   await fs.mkdir(ontomarkDir, { recursive: true });
@@ -31,10 +42,6 @@ export async function markProcessed(
     // 文件不存在，使用默认空数据
   }
 
-  // 计算文件哈希
-  const fileContent = await fs.readFile(absolutePath, 'utf-8');
-  const hash = crypto.createHash('md5').update(fileContent).digest('hex');
-
   // 计算 ontology.yaml 哈希
   const ontologyResult = await getOntologyPath(projectPath);
   if (ontologyResult.exists) {
@@ -42,12 +49,27 @@ export async function markProcessed(
     data.ontologyHash = crypto.createHash('md5').update(ontologyContent).digest('hex');
   }
 
-  // 更新数据
-  data.files[filePath] = {
-    lastProcessed: new Date().toISOString(),
-    hash,
-  };
+  // 更新所有文件（并行计算哈希）
+  const newEntries = await Promise.all(
+    filePaths.map(async (filePath) => {
+      const absolutePath = path.join(projectPath, filePath);
+      const fileContent = await fs.readFile(absolutePath, 'utf-8');
+      const hash = crypto.createHash('md5').update(fileContent).digest('hex');
+      return {
+        filePath,
+        lastProcessed: new Date().toISOString(),
+        hash,
+      };
+    })
+  );
 
-  // 写入文件
+  for (const entry of newEntries) {
+    data.files[entry.filePath] = {
+      lastProcessed: entry.lastProcessed,
+      hash: entry.hash,
+    };
+  }
+
+  // 一次性写入
   await fs.writeFile(processedPath, JSON.stringify(data, null, 2), 'utf-8');
 }

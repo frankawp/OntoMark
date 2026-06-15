@@ -155,7 +155,7 @@ MIT
 |------|------|
 | `ontomark skill-install` | 安装 Skill 到用户目录 |
 | `ontomark skill-uninstall` | 卸载 Skill |
-| `ontomark init` | 初始化项目（可选，创建 ontology.yaml 模板） |
+| `ontomark init` | 初始化项目（创建 raw/、wiki/、.ontomark/ 目录）✅ 已实现 |
 
 ### package.json 更新
 

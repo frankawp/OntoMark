@@ -122,44 +122,50 @@ describe('V3 Tool Types', () => {
   it('should define WikiWriteInput structure', () => {
     const input: WikiWriteInput = {
       projectPath: '/project',
-      canonical: 'Test Entity',
-      type: 'Person',
-      content: 'Test content',
-      sources: [{ file: 'raw/test.md', line: 1 }],
-      isUpdate: false,
+      entities: [{
+        canonical: 'Test Entity',
+        type: 'Person',
+        content: 'Test content',
+        sources: [{ file: 'raw/test.md', lines: [1] }],
+        isUpdate: false,
+      }],
     };
-    expect(input.canonical).toBe('Test Entity');
+    expect(input.entities[0].canonical).toBe('Test Entity');
   });
 
   it('should handle WikiWriteInput with optional fields', () => {
     const input: WikiWriteInput = {
       projectPath: '/project',
-      canonical: 'Test Entity',
-      type: 'Person',
-      aliases: ['Alias 1', 'Alias 2'],
-      info: { key1: 'value1', key2: 'value2' },
-      content: 'Test content',
-      sources: [{ file: 'raw/test.md', line: 1 }],
-      needsReview: true,
-      isUpdate: true,
+      entities: [{
+        canonical: 'Test Entity',
+        type: 'Person',
+        aliases: ['Alias 1', 'Alias 2'],
+        info: { key1: 'value1', key2: 'value2' },
+        content: 'Test content',
+        sources: [{ file: 'raw/test.md', lines: [1] }],
+        needsReview: true,
+        isUpdate: true,
+      }],
     };
-    expect(input.aliases).toEqual(['Alias 1', 'Alias 2']);
-    expect(input.needsReview).toBe(true);
-    expect(input.info?.key1).toBe('value1');
+    expect(input.entities[0].aliases).toEqual(['Alias 1', 'Alias 2']);
+    expect(input.entities[0].needsReview).toBe(true);
+    expect(input.entities[0].info?.key1).toBe('value1');
   });
 
   it('should handle WikiWriteInput without optional fields', () => {
     const input: WikiWriteInput = {
       projectPath: '/project',
-      canonical: 'Test Entity',
-      type: 'Person',
-      content: 'Test content',
-      sources: [{ file: 'raw/test.md', line: 1 }],
-      isUpdate: false,
+      entities: [{
+        canonical: 'Test Entity',
+        type: 'Person',
+        content: 'Test content',
+        sources: [{ file: 'raw/test.md', lines: [1] }],
+        isUpdate: false,
+      }],
     };
-    expect(input.aliases).toBeUndefined();
-    expect(input.needsReview).toBeUndefined();
-    expect(input.info).toBeUndefined();
+    expect(input.entities[0].aliases).toBeUndefined();
+    expect(input.entities[0].needsReview).toBeUndefined();
+    expect(input.entities[0].info).toBeUndefined();
   });
 
   // ============ IndexQueryResult 测试 ============

@@ -4,11 +4,12 @@
 import * as fs from 'fs/promises';
 import * as fsSync from 'fs';
 import * as path from 'path';
+import * as os from 'os';
 
 // npm 全局安装时的 Skill 源路径
 const SKILL_SOURCE_DIR = '.claude/skills/ontomark';
 // 用户 Skill 目标路径
-const SKILL_TARGET_DIR = path.join(process.env.HOME || '', '.claude', 'skills', 'ontomark');
+const SKILL_TARGET_DIR = path.join(os.homedir(), '.claude', 'skills', 'ontomark');
 
 /**
  * 安装 Skill 到用户目录

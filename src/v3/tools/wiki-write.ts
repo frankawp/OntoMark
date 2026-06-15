@@ -20,7 +20,7 @@ export async function wikiWrite(input: WikiWriteInput): Promise<WikiWriteResult>
   // 验证 ontology
   const ontology = await ontologyStatus(projectPath);
   if (!ontology.exists) {
-    throw new Error('ontology.yaml not found');
+    throw new Error('未找到 ontology.yaml，请先运行 ontomark init 创建项目结构');
   }
 
   const results: WikiWriteItemResult[] = [];
@@ -71,14 +71,15 @@ async function writeSingleEntity(
       canonical,
       success: false,
       action: 'created',
-      error: `Unknown entity type: ${type}. Available types: ${Object.keys(entityTypes).join(', ')}`,
+      error: `未知实体类型: ${type}。可用类型: ${Object.keys(entityTypes).join(', ')}`,
     };
   }
 
   // 构建文件路径（直接使用 type，不加 s）
   const sanitizedName = canonical
     .replace(/\s+/g, '_')
-    .replace(/[^\w\-一-鿿]/g, '');
+    // 保留 字母数字、下划线、连字符、CJK、拉丁扩展字符
+    .replace(/[^\w\-一-鿿À-ɏ]/g, '');
   const filePath = path.join(projectPath, 'wiki', type, `${sanitizedName}.md`);
 
   // 检查文件存在状态
@@ -89,7 +90,7 @@ async function writeSingleEntity(
       canonical,
       success: false,
       action: 'updated',
-      error: `Cannot update: file does not exist: ${filePath}. 提示：使用 isUpdate=false 来新建实体`,
+      error: `无法更新：文件不存在: ${filePath}。提示：使用 isUpdate=false 来新建实体`,
     };
   }
   if (!isUpdate && exists) {
@@ -97,7 +98,7 @@ async function writeSingleEntity(
       canonical,
       success: false,
       action: 'created',
-      error: `Cannot create: file already exists: ${filePath}. 提示：使用 isUpdate=true 来更新现有实体`,
+      error: `无法创建：文件已存在: ${filePath}。提示：使用 isUpdate=true 来更新现有实体`,
     };
   }
 
@@ -141,7 +142,7 @@ async function writeSingleEntity(
         canonical,
         success: false,
         action: 'updated',
-        error: `Failed to read existing file: ${err}`,
+        error: `读取现有文件失败: ${err}`,
       };
     }
   } else {
@@ -177,7 +178,7 @@ async function writeSingleEntity(
       canonical,
       success: false,
       action: isUpdate ? 'updated' : 'created',
-      error: `Failed to write file: ${err}`,
+      error: `写入文件失败: ${err}`,
     };
   }
 }

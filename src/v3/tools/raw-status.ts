@@ -46,7 +46,9 @@ export async function rawStatus(
     const savedOntologyHash = processedData.ontologyHash;
     ontologyChanged = !savedOntologyHash || savedOntologyHash !== ontologyHash;
   } else {
-    ontologyChanged = true;
+    // ontology.yaml 不存在：若之前从未有过（savedOntologyHash 为空）则不算变化
+    ontologyHash = '';
+    ontologyChanged = !!processedData.ontologyHash;
   }
 
   // 递归扫描 raw 目录

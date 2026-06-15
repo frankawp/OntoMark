@@ -37,6 +37,14 @@ description: Use when building or querying an OntoMark wiki knowledge base. Trig
 
 调用方式：`ontomark <command> <project-path>` 或 `./ontomark <command> <project-path>`
 
+### 项目初始化
+
+```bash
+# 初始化项目（创建 raw/、wiki/、.ontomark/ 目录）
+# ontology.yaml 由 Ingest 第一次执行时自动生成，无需手动创建
+ontomark init [project-path]
+```
+
 ### 状态查询
 
 ```bash

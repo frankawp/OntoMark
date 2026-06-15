@@ -43,12 +43,19 @@ ontomark skill-install
 
 ## 快速开始
 
-### 1. 创建项目结构
+### 1. 初始化项目
 
 ```bash
-mkdir -p my-knowledge/raw my-knowledge/wiki
+ontomark init my-knowledge
 cd my-knowledge
 ```
+
+这会自动创建以下结构：
+- `raw/` — 源文档目录
+- `wiki/` — 知识库输出目录
+- `.ontomark/` — 内部状态目录
+
+> `ontology.yaml` 不需要手动创建，Ingest 第一次执行时会根据文档内容动态推荐。
 
 ### 2. 添加文档
 
@@ -80,12 +87,16 @@ ontomark lint-all .
 
 | 命令 | 用途 |
 |------|------|
+| `ontomark init [path]` | 初始化项目结构（创建 raw/、wiki/、.ontomark/ 目录） |
 | `ontomark skill-install` | 安装 Skill 到 Claude Code |
 | `ontomark skill-uninstall` | 卸载 Skill |
 | `ontomark ontology-status <path>` | 查看本体状态 |
 | `ontomark raw-status <path>` | 查看待处理文件 |
 | `ontomark wiki-status <path>` | 查看 wiki 状态 |
+| `ontomark wiki-write <path>` | 写入 wiki 页面（支持批量） |
 | `ontomark index-build <path>` | 构建实体索引 |
+| `ontomark index-query <path> <name>` | 查询实体索引 |
+| `ontomark mark-processed <path>` | 标记文件已处理 |
 | `ontomark lint-all <path>` | 检查 wiki 健康状态 |
 
 ### raw-status 参数

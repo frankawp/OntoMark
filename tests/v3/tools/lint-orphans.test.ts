@@ -41,4 +41,18 @@ describe('lint-orphans', () => {
     const result = await lintOrphans(tempDir);
     expect(result.orphans).toHaveLength(0);
   });
+
+  it('should handle [[target|display]] alias syntax for incoming links', async () => {
+    const personsDir = path.join(wikiDir, 'Persons');
+    await fs.mkdir(personsDir, { recursive: true });
+    // A 用别名语法引用 B
+    await fs.writeFile(path.join(personsDir, 'A.md'),
+      '---\ncanonical: A\nentity_type: Person\n---\n# A\n\nSee [[B|Bee]].');
+    await fs.writeFile(path.join(personsDir, 'B.md'),
+      '---\ncanonical: B\nentity_type: Person\n---\n# B');
+
+    const result = await lintOrphans(tempDir);
+    expect(result.orphans).toContain('A');
+    expect(result.orphans).not.toContain('B');  // B 通过别名语法被引用
+  });
 });

@@ -58,6 +58,29 @@ entity_types:
         - key: context
           label: 背景
 
+  # 产品和技术
+  Product:
+    description: 产品（软件、应用、服务、硬件等）
+    template:
+      info:
+        - key: type
+          label: 产品类型
+        - key: developer
+          label: 开发者/公司
+        - key: launched
+          label: 发布日期
+
+  Technology:
+    description: 技术（AI 模型、算法、框架、技术标准等）
+    template:
+      info:
+        - key: type
+          label: 技术类型
+        - key: developer
+          label: 开发者
+        - key: applications
+          label: 应用领域
+
   # 概念类
   Concept:
     description: 抽象概念（政策、理论、法律、协议等）
@@ -106,3 +129,18 @@ relations:
     description: 隶属于
     from: Organization
     to: Organization
+
+  developed_by:
+    description: 由...开发
+    from: Product
+    to: Organization
+
+  created_by:
+    description: 由...创造
+    from: Technology
+    to: Organization
+
+  uses_technology:
+    description: 使用技术
+    from: Product
+    to: Technology

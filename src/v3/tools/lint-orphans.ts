@@ -2,6 +2,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import matter from 'gray-matter';
 import { LintOrphansResult } from './types';
+import { parseWikiLinkTarget } from './normalize';
 
 /**
  * 检查孤立页面（无入链）
@@ -29,9 +30,11 @@ export async function lintOrphans(projectPath: string): Promise<LintOrphansResul
               const linkPattern = /\[\[([^\]]+)\]\]/g;
               let match;
               while ((match = linkPattern.exec(parsed.content)) !== null) {
-                const target = match[1];
-                if (!incomingLinks.has(target)) incomingLinks.set(target, new Set());
-                incomingLinks.get(target)!.add(canonical);
+                const target = parseWikiLinkTarget(match[1]);
+                if (target) {
+                  if (!incomingLinks.has(target)) incomingLinks.set(target, new Set());
+                  incomingLinks.get(target)!.add(canonical);
+                }
               }
             }
           } catch {}

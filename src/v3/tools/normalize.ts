@@ -77,15 +77,38 @@ export function normalizeEntityName(name: string): string {
 }
 
 /**
+ * 从 WikiLink 捕获内容中提取规范名称
+ *
+ * 处理 [[target]] 和 [[target|display]] 两种格式：
+ * - [[Connor Bedard]]          → "Connor Bedard"
+ * - [[Connor Bedard|Bedard]]  → "Connor Bedard"
+ */
+export function parseWikiLinkTarget(capture: string): string {
+  // 按 | 分割，取第一部分作为规范名称
+  const target = capture.split('|')[0];
+  return normalizeEntityName(target);
+}
+
+/**
  * 规范化 WikiLinks 格式
  *
- * 确保链接格式为 [[CanonicalName]]
+ * 确保链接格式为 [[CanonicalName]] 或 [[CanonicalName|Display]]
  */
 export function normalizeWikiLink(link: string): string {
   // 移除已有的 [[ ]] 包装
-  let name = link.replace(/^\[\[|\]\]$/g, '');
-  name = normalizeEntityName(name);
-  return `[[${name}]]`;
+  let inner = link.replace(/^\[\[|\]\]$/g, '');
+
+  // 处理 [[target|display]] 别名语法
+  const pipeIndex = inner.indexOf('|');
+  if (pipeIndex !== -1) {
+    const target = normalizeEntityName(inner.substring(0, pipeIndex));
+    const display = inner.substring(pipeIndex + 1).trim();
+    if (!target) return link; // 保护：目标名为空时不修改
+    return `[[${target}|${display}]]`;
+  }
+
+  inner = normalizeEntityName(inner);
+  return `[[${inner}]]`;
 }
 
 /**
@@ -97,7 +120,7 @@ export function extractAndNormalizeWikiLinks(text: string): string[] {
   let match;
 
   while ((match = pattern.exec(text)) !== null) {
-    const normalized = normalizeEntityName(match[1]);
+    const normalized = parseWikiLinkTarget(match[1]);
     if (normalized && !links.includes(normalized)) {
       links.push(normalized);
     }

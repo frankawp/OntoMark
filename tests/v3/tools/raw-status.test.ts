@@ -84,6 +84,8 @@ describe('raw-status', () => {
 
     const result = await rawStatus(tempDir);
     expect(result.pending).toBe(0);
-    expect(result.files.find(f => f.path === 'raw/stable.md')?.modified).toBe(false);
+    // 传 modified='all' 查看所有文件以验证 stable.md 的状态
+    const allResult = await rawStatus(tempDir, { modified: 'all' });
+    expect(allResult.files.find(f => f.path === 'raw/stable.md')?.modified).toBe(false);
   });
 });

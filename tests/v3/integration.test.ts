@@ -53,13 +53,15 @@ entity_types:
     // 3. 写入 wiki
     const writeResult = await wikiWrite({
       projectPath: tempDir,
-      canonical: 'John Doe',
-      type: 'Person',
-      content: 'Test content',
-      sources: [{ file: 'raw/test.md', line: 1 }],
-      isUpdate: false,
+      entities: [{
+        canonical: 'John Doe',
+        type: 'Person',
+        content: 'Test content',
+        sources: [{ file: 'raw/test.md', lines: [1] }],
+        isUpdate: false,
+      }],
     });
-    expect(writeResult.success).toBe(true);
+    expect(writeResult.results[0].success).toBe(true);
 
     // 4. 标记已处理
     await markProcessed(tempDir, 'raw/test.md');
