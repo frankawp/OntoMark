@@ -92,21 +92,6 @@ describe('wiki-write', () => {
     expect(content).toContain('Mr. Doe');
   });
 
-  it('should write with info', async () => {
-    const result = await wikiWrite({
-      projectPath: tempDir,
-      entities: [{
-        canonical: 'John Doe',
-        type: 'Person',
-        info: { 部门: '技术部', 职位: '工程师' },
-        content: 'Test',
-        sources: [{ file: 'raw/test.md' }],
-      }],
-    });
-    const content = await fs.readFile(result.results[0].path!, 'utf-8');
-    expect(content).toContain('部门');
-    expect(content).toContain('技术部');
-  });
 
   // ============ 错误处理 ============
 

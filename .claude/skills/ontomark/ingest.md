@@ -45,7 +45,8 @@
 
 ### 第四步：处理 WikiLinks
 
-参考 [wikilinks-annotation.md](./reference/wikilinks-annotation.md) 标注实体引用。
+针对准备写入的wiki的content内容，在其中做实体标注，建立WikiLinks。
+目标： 1. 标注出符合本体 的实体。 2. 连接到wiki中正确的实体上，具体的标注方法参考 [wikilinks-annotation.md](./reference/wikilinks-annotation.md) 标注实体引用。
 
 ### 第五步：写入 wiki
 

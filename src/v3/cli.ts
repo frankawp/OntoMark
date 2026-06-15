@@ -141,7 +141,6 @@ program
   .option('--content <content>', '内容（单个实体时使用）')
   .option('--sources <json>', '来源（字符串数组或对象数组）')
   .option('--aliases <json>', '别名 JSON')
-  .option('--info <json>', '信息 JSON')
   .option('--needs-review', '是否需审核')
   .action(async (projectPath: string, options) => {
     let entities: WikiWriteEntity[] = [];
@@ -157,7 +156,6 @@ program
         content: options.content,
         sources: safeJsonParse<Array<{ file: string; lines?: number[] }>>(options.sources, '--sources'),
         aliases: options.aliases ? safeJsonParse<string[]>(options.aliases, '--aliases') : undefined,
-        info: options.info ? safeJsonParse<Record<string, string>>(options.info, '--info') : undefined,
         needsReview: options.needsReview,
       }];
     } else {

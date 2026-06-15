@@ -187,7 +187,6 @@ ontomark wiki-write <project-path> \
   content: string;          // 描述内容（必需）
   sources: SourceRef[];     // 来源（必需）
   aliases?: string[];       // 别名
-  info?: Record<string, string>;  // 关键信息
   needsReview?: boolean;    // 是否需审核
 }
 

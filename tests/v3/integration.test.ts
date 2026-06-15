@@ -58,7 +58,6 @@ entity_types:
         type: 'Person',
         content: 'Test content',
         sources: [{ file: 'raw/test.md', lines: [1] }],
-        isUpdate: false,
       }],
     });
     expect(writeResult.results[0].success).toBe(true);

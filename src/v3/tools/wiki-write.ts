@@ -53,7 +53,7 @@ async function writeSingleEntity(
   entity: WikiWriteEntity,
   entityTypes: Record<string, any>
 ): Promise<WikiWriteItemResult> {
-  const { canonical: rawCanonical, type, aliases: rawAliases, info, content: rawContent, sources, needsReview } = entity;
+  const { canonical: rawCanonical, type, aliases: rawAliases, content: rawContent, sources, needsReview } = entity;
 
   // 规范化名称
   const canonical = normalizeEntityName(rawCanonical);
@@ -86,9 +86,8 @@ async function writeSingleEntity(
 
   if (aliases?.length) frontmatter.aliases = aliases;
   if (needsReview) frontmatter.needs_review = true;
-  if (info && Object.keys(info).length > 0) frontmatter.info = info;
 
-  const body = generatePageBody(canonical, info, content, sources);
+  const body = generatePageBody(canonical, content, sources);
 
   // 写入文件
   try {
@@ -126,20 +125,11 @@ function normalizeSources(sources: SourceRef[]): Array<{ file: string; lines?: n
  */
 function generatePageBody(
   canonical: string,
-  info: Record<string, string> | undefined,
   content: string,
   sources: SourceRef[]
 ): string {
   const lines: string[] = [];
   lines.push(`# ${canonical}`, '', content, '');
-
-  if (info && Object.keys(info).length > 0) {
-    lines.push('## 关键信息', '', '| 字段 | 值 |', '| --- | --- |');
-    for (const [key, value] of Object.entries(info)) {
-      lines.push(`| ${key} | ${value} |`);
-    }
-    lines.push('');
-  }
 
   lines.push('## 来源', '');
   for (const source of sources) {

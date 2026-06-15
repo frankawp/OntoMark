@@ -10,10 +10,6 @@
 # entity_types:
 #   <类型名称>:
 #     description: 类型描述
-#     template:
-#       info:
-#         - key: 字段名
-#           label: 字段显示名
 #
 # relations:
 #   <关系名称>:
@@ -25,10 +21,6 @@
 #
 # entity_types.<类型名称>.description
 #   - 必需，类型的文字描述
-#
-# entity_types.<类型名称>.template.info
-#   - 可选，定义实体页面的关键信息字段
-#   - 每个 info 项包含 key（字段名）和 label（显示名）
 #
 # relations.<关系名称>.from / .to
 #   - 必需，指定关系连接的实体类型

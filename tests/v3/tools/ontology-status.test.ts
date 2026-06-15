@@ -26,10 +26,6 @@ version: "1.0"
 entity_types:
   Person:
     description: 人物
-    template:
-      info:
-        - key: role
-          label: 角色
   Event:
     description: 事件
 `;

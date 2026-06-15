@@ -38,10 +38,6 @@ export interface WikiStatusResult {
 
 export interface EntityTypeDef {
   description: string;
-  template?: {
-    summary?: string;
-    info?: Array<{ key: string; label?: string }>;
-  };
 }
 
 export interface OntologyStatusResult {
@@ -65,7 +61,6 @@ export interface WikiWriteEntity {
   canonical: string;
   type: string;
   aliases?: string[];
-  info?: Record<string, string>;
   content: string;
   sources: SourceRef[];
   needsReview?: boolean;

@@ -93,16 +93,11 @@ describe('V3 Tool Types', () => {
         },
         Organization: {
           description: 'An organization entity',
-          template: {
-            summary: 'Default summary',
-            info: [{ key: 'founded', label: 'Founded' }],
-          },
         },
       },
     };
     expect(result.exists).toBe(true);
     expect(result.entityTypes['Person'].description).toBe('A person entity');
-    expect(result.entityTypes['Organization'].template?.summary).toBe('Default summary');
   });
 
   it('should handle OntologyStatusResult when ontology does not exist', () => {
@@ -127,7 +122,6 @@ describe('V3 Tool Types', () => {
         type: 'Person',
         content: 'Test content',
         sources: [{ file: 'raw/test.md', lines: [1] }],
-        isUpdate: false,
       }],
     };
     expect(input.entities[0].canonical).toBe('Test Entity');
@@ -140,16 +134,13 @@ describe('V3 Tool Types', () => {
         canonical: 'Test Entity',
         type: 'Person',
         aliases: ['Alias 1', 'Alias 2'],
-        info: { key1: 'value1', key2: 'value2' },
         content: 'Test content',
         sources: [{ file: 'raw/test.md', lines: [1] }],
         needsReview: true,
-        isUpdate: true,
       }],
     };
     expect(input.entities[0].aliases).toEqual(['Alias 1', 'Alias 2']);
     expect(input.entities[0].needsReview).toBe(true);
-    expect(input.entities[0].info?.key1).toBe('value1');
   });
 
   it('should handle WikiWriteInput without optional fields', () => {
@@ -160,12 +151,10 @@ describe('V3 Tool Types', () => {
         type: 'Person',
         content: 'Test content',
         sources: [{ file: 'raw/test.md', lines: [1] }],
-        isUpdate: false,
       }],
     };
     expect(input.entities[0].aliases).toBeUndefined();
     expect(input.entities[0].needsReview).toBeUndefined();
-    expect(input.entities[0].info).toBeUndefined();
   });
 
   // ============ IndexQueryResult 测试 ============

@@ -44,14 +44,11 @@
 ```json
 [
   {
-    "name": "实体规范名称",
-    "type": "实体类型（必须存在于 entity_types）",
+    "canonical": "实体规范名称",
+    "type": "实体类型（必须存在于 entityTypes）",
     "aliases": ["别名1", "别名2"],
-    "info": {
-      "字段1": "值1",
-      "字段2": "值2"
-    },
-    "context": "实体描述或上下文片段",
+    "content": "实体的完整描述，包含所有关键信息",
+    "sources": ["raw/document.md"],
     "extraction_type": "direct | inferred | summarized"
   }
 ]
@@ -67,11 +64,10 @@
 
 ## 注意事项
 
-1. 所有 type 必须存在于 entity_types 中
-2. name 使用最完整、最规范的名称
+1. 所有 type 必须存在于 entityTypes 中
+2. canonical 使用最完整、最规范的名称
 3. aliases 包含文档中出现的其他称呼
-4. info 根据 entity_types 的 template 填充
-5. context 保持原文本片段，便于溯源
+4. content 应包含完整的实体描述，所有关键信息都写在 content 中
 ```
 
 ## 使用示例
@@ -86,24 +82,19 @@ Connor Bedard 在昨晚的比赛中表现出色，帮助球队取得胜利。
 ```json
 [
   {
-    "name": "Connor Bedard",
+    "canonical": "Connor Bedard",
     "type": "Person",
     "aliases": ["Bedard", "这位 18 岁的新秀"],
-    "info": {
-      "age": "18",
-      "role": "进攻核心"
-    },
-    "context": "Connor Bedard 在昨晚的比赛中表现出色，帮助球队取得胜利。",
+    "content": "Connor Bedard 是一名 18 岁的冰球运动员，担任球队的进攻核心。在昨晚的比赛中表现出色，帮助球队取得胜利。",
+    "sources": ["raw/article.md"],
     "extraction_type": "direct"
   },
   {
-    "name": "昨晚比赛",
+    "canonical": "昨晚比赛",
     "type": "Event",
     "aliases": [],
-    "info": {
-      "date": "昨晚"
-    },
-    "context": "昨晚的比赛中表现出色",
+    "content": "昨晚举行的冰球比赛，Connor Bedard 在此比赛中表现出色。",
+    "sources": ["raw/article.md"],
     "extraction_type": "inferred"
   }
 ]
