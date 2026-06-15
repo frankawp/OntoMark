@@ -1,150 +1,35 @@
-# ⚠️ 此文件仅为 ontology.yaml 格式样例
-# 实际项目中必须通过 `ontomark ontology-status <project-path>` 命令获取可用的实体类型
-# 切勿直接使用此样例中的类型名称
-
-version: "1.0"
-entity_types:
-  # 核心实体类型
-  Person:
-    description: 人物（真实人物、记者、官员、专家、当事人等）
-    template:
-      info:
-        - key: role
-          label: 角色/职位
-        - key: organization
-          label: 所属组织
-        - key: nationality
-          label: 国籍
-
-  Organization:
-    description: 组织（公司、政府机构、政党、军队、NGO、媒体等）
-    template:
-      info:
-        - key: type
-          label: 类型
-        - key: headquarters
-          label: 总部
-        - key: founded
-          label: 成立时间
-
-  Location:
-    description: 地点（城市、国家、地区、建筑物、地理区域等）
-    template:
-      info:
-        - key: type
-          label: 类型（城市/国家/地区）
-        - key: country
-          label: 所属国家
-        - key: population
-          label: 人口
-
-  Event:
-    description: 事件（新闻事件、事故、会议、冲突、灾难等）
-    template:
-      info:
-        - key: date
-          label: 发生日期
-        - key: location
-          label: 发生地点
-        - key: casualties
-          label: 伤亡情况
-        - key: outcome
-          label: 结果/影响
-
-  Statement:
-    description: 声明/引言（重要发言、观点、声明）
-    template:
-      info:
-        - key: speaker
-          label: 发言人
-        - key: date
-          label: 发言日期
-        - key: context
-          label: 背景
-
-  # 产品和技术
-  Product:
-    description: 产品（软件、应用、服务、硬件等）
-    template:
-      info:
-        - key: type
-          label: 产品类型
-        - key: developer
-          label: 开发者/公司
-        - key: launched
-          label: 发布日期
-
-  Technology:
-    description: 技术（AI 模型、算法、框架、技术标准等）
-    template:
-      info:
-        - key: type
-          label: 技术类型
-        - key: developer
-          label: 开发者
-        - key: applications
-          label: 应用领域
-
-  # 概念类
-  Concept:
-    description: 抽象概念（政策、理论、法律、协议等）
-    template:
-      info:
-        - key: definition
-          label: 定义
-        - key: related_laws
-          label: 相关法律
-
-  Topic:
-    description: 主题页/知识地图（聚合相关实体）
-
-relations:
-  works_for:
-    description: 就职于
-    from: Person
-    to: Organization
-
-  located_in:
-    description: 位于
-    from: Location
-    to: Location
-
-  participated_in:
-    description: 参与了
-    from: Person
-    to: Event
-
-  organized_by:
-    description: 由...组织
-    from: Event
-    to: Organization
-
-  occurred_at:
-    description: 发生在
-    from: Event
-    to: Location
-
-  spoke_about:
-    description: 发言关于
-    from: Statement
-    to: Event
-
-  affiliated_with:
-    description: 隶属于
-    from: Organization
-    to: Organization
-
-  developed_by:
-    description: 由...开发
-    from: Product
-    to: Organization
-
-  created_by:
-    description: 由...创造
-    from: Technology
-    to: Organization
-
-  uses_technology:
-    description: 使用技术
-    from: Product
-    to: Technology
+# ontology.yaml 格式说明
+#
+# ⚠️ 此文件仅为格式样例，不包含任何实体类型定义
+# ⚠️ 实际项目中必须通过 `ontomark ontology-status <project-path>` 命令获取可用的实体类型
+# ⚠️ 切勿假设或硬编码任何实体类型名称
+#
+# === 格式结构 ===
+#
+# version: "1.0"
+# entity_types:
+#   <类型名称>:
+#     description: 类型描述
+#     template:
+#       info:
+#         - key: 字段名
+#           label: 字段显示名
+#
+# relations:
+#   <关系名称>:
+#     description: 关系描述
+#     from: 源实体类型
+#     to: 目标实体类型
+#
+# === 字段说明 ===
+#
+# entity_types.<类型名称>.description
+#   - 必需，类型的文字描述
+#
+# entity_types.<类型名称>.template.info
+#   - 可选，定义实体页面的关键信息字段
+#   - 每个 info 项包含 key（字段名）和 label（显示名）
+#
+# relations.<关系名称>.from / .to
+#   - 必需，指定关系连接的实体类型
+#
