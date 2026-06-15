@@ -1,0 +1,33 @@
+# 开发文件
+src/
+tests/
+docs/
+
+# 配置文件
+tsconfig.json
+jest.config.js
+.gitignore
+
+# 脚本（CLI 已包含安装功能）
+scripts/
+
+# 测试数据
+tests/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 日志
+*.log
+npm-debug.log*
+
+# 临时文件
+*.tmp
+*.temp

@@ -134,9 +134,8 @@ program
 // Wiki 工具
 program
   .command('wiki-write <project-path>')
-  .description('写入 wiki 页面（支持批量）')
-  .option('--file <path>', '从 JSON 文件读取实体列表')
-  .option('--entities <json>', '实体列表 JSON（与 --file 二选一）')
+  .description('写入 wiki 页面（覆盖写入）')
+  .option('--entities <json>', '实体列表 JSON')
   .option('--canonical <name>', '规范名称（单个实体时使用）')
   .option('--type <type>', '实体类型（单个实体时使用）')
   .option('--content <content>', '内容（单个实体时使用）')
@@ -144,15 +143,10 @@ program
   .option('--aliases <json>', '别名 JSON')
   .option('--info <json>', '信息 JSON')
   .option('--needs-review', '是否需审核')
-  .option('--is-update <boolean>', '是否更新现有实体', (v) => v === 'true')
   .action(async (projectPath: string, options) => {
     let entities: WikiWriteEntity[] = [];
 
-    if (options.file) {
-      // 从文件读取
-      const fileContent = fs.readFileSync(options.file, 'utf-8');
-      entities = JSON.parse(fileContent);
-    } else if (options.entities) {
+    if (options.entities) {
       // 从命令行参数读取
       entities = safeJsonParse<WikiWriteEntity[]>(options.entities, '--entities');
     } else if (options.canonical && options.type && options.content && options.sources) {
@@ -165,12 +159,10 @@ program
         aliases: options.aliases ? safeJsonParse<string[]>(options.aliases, '--aliases') : undefined,
         info: options.info ? safeJsonParse<Record<string, string>>(options.info, '--info') : undefined,
         needsReview: options.needsReview,
-        isUpdate: options.isUpdate ?? false,
       }];
     } else {
-      console.error('错误：请提供 --file、--entities 或完整的单个实体参数');
+      console.error('错误：请提供 --entities 或完整的单个实体参数');
       console.error('用法示例：');
-      console.error('  批量：ontomark wiki-write . --file entities.json');
       console.error('  批量：ontomark wiki-write . --entities \'[{"canonical":"X","type":"Person",...}]\'');
       console.error('  单个：ontomark wiki-write . --canonical "X" --type Person --content "..." --sources \'["raw/a.md"]\'');
       process.exit(1);

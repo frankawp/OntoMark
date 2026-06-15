@@ -1,15 +1,18 @@
 #!/bin/bash
-# 从 Claude Code 卸载 OntoMark Skill
+# 卸载 OntoMark CLI 和 Skill
 
 set -e
 
-CLAUDE_SKILL_DIR="$HOME/.claude/skills/ontomark"
+echo "🗑️  卸载 OntoMark..."
 
-echo "🗑️  卸载 OntoMark Skill..."
-
-if [ -d "$CLAUDE_SKILL_DIR" ]; then
-    rm -rf "$CLAUDE_SKILL_DIR"
-    echo "✅ Skill 已卸载"
-else
-    echo "⚠️  Skill 未安装"
+# 卸载 Skill
+if command -v ontomark &> /dev/null; then
+    echo "⏳ 正在卸载 Skill..."
+    ontomark skill-uninstall
 fi
+
+# 卸载 CLI
+echo "⏳ 正在卸载 CLI..."
+npm uninstall -g ontomark
+
+echo "✅ OntoMark 已完全卸载"

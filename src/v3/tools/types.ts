@@ -69,7 +69,6 @@ export interface WikiWriteEntity {
   content: string;
   sources: SourceRef[];
   needsReview?: boolean;
-  isUpdate: boolean;
 }
 
 export interface WikiWriteInput {
@@ -81,14 +80,11 @@ export interface WikiWriteItemResult {
   canonical: string;
   success: boolean;
   path?: string;
-  action: 'created' | 'updated';
   error?: string;
 }
 
 export interface WikiWriteResult {
   total: number;
-  created: number;
-  updated: number;
   failed: number;
   results: WikiWriteItemResult[];
 }

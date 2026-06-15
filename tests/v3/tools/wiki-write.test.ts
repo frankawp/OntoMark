@@ -14,7 +14,6 @@ describe('wiki-write', () => {
       type: 'Person',
       content: 'Test content',
       sources: [{ file: 'raw/test.md', lines: [1] }],
-      isUpdate: false,
     }],
     ...overrides,
   });
@@ -32,12 +31,11 @@ describe('wiki-write', () => {
     await fs.rm(tempDir, { recursive: true, force: true });
   });
 
-  // ============ 创建 ============
+  // ============ 写入 ============
 
   it('should create new wiki page', async () => {
     const result = await wikiWrite(makeInput());
     expect(result.results[0].success).toBe(true);
-    expect(result.results[0].action).toBe('created');
 
     const content = await fs.readFile(result.results[0].path!, 'utf-8');
     expect(content).toContain('canonical: John Doe');
@@ -52,7 +50,6 @@ describe('wiki-write', () => {
         type: 'Person',
         content: 'Singer',
         sources: [{ file: 'raw/test.md' }],
-        isUpdate: false,
       }],
     });
     expect(result.results[0].success).toBe(true);
@@ -61,20 +58,8 @@ describe('wiki-write', () => {
     expect(content).toContain('canonical: Beyoncé');
   });
 
-  it('should fail if file exists on create', async () => {
-    // 手动创建文件使创建失败
-    const personsDir = path.join(tempDir, 'wiki', 'Person');
-    await fs.mkdir(personsDir, { recursive: true });
-    await fs.writeFile(path.join(personsDir, 'John_Doe.md'), 'existing');
-
-    const result = await wikiWrite(makeInput());
-    expect(result.results[0].success).toBe(false);
-    expect(result.results[0].error).toContain('无法创建');
-  });
-
-  // ============ 更新 ============
-
-  it('should update existing page', async () => {
+  it('should overwrite existing page', async () => {
+    // 先创建文件
     const personsDir = path.join(tempDir, 'wiki', 'Person');
     await fs.mkdir(personsDir, { recursive: true });
     await fs.writeFile(
@@ -82,62 +67,45 @@ describe('wiki-write', () => {
       '---\ncanonical: John Doe\nentity_type: Person\nsources: []\n---\n# John Doe\n\nOriginal.'
     );
 
-    const result = await wikiWrite({
-      projectPath: tempDir,
-      entities: [{
-        canonical: 'John Doe',
-        type: 'Person',
-        content: 'Updated content',
-        sources: [{ file: 'raw/test.md', lines: [1] }],
-        isUpdate: true,
-      }],
-    });
+    // 再次写入覆盖
+    const result = await wikiWrite(makeInput());
     expect(result.results[0].success).toBe(true);
-    expect(result.results[0].action).toBe('updated');
 
     const content = await fs.readFile(result.results[0].path!, 'utf-8');
-    expect(content).toContain('Original.');
-    expect(content).toContain('Updated content');
+    expect(content).toContain('Test content');
+    expect(content).not.toContain('Original.');
   });
 
-  it('should fail update if file does not exist', async () => {
+  it('should write with aliases', async () => {
     const result = await wikiWrite({
       projectPath: tempDir,
       entities: [{
         canonical: 'John Doe',
         type: 'Person',
-        content: 'Updated',
-        sources: [{ file: 'raw/test.md', lines: [1] }],
-        isUpdate: true,
-      }],
-    });
-    expect(result.results[0].success).toBe(false);
-    expect(result.results[0].error).toContain('无法更新');
-  });
-
-  it('should merge aliases on update', async () => {
-    const personsDir = path.join(tempDir, 'wiki', 'Person');
-    await fs.mkdir(personsDir, { recursive: true });
-    await fs.writeFile(
-      path.join(personsDir, 'John_Doe.md'),
-      '---\ncanonical: John Doe\nentity_type: Person\naliases:\n  - Johnny\nsources: []\n---\n# John Doe'
-    );
-
-    const result = await wikiWrite({
-      projectPath: tempDir,
-      entities: [{
-        canonical: 'John Doe',
-        type: 'Person',
-        aliases: ['John', 'Mr. Doe'],
-        content: 'Updated',
-        sources: [{ file: 'raw/test.md', lines: [1] }],
-        isUpdate: true,
+        aliases: ['Johnny', 'Mr. Doe'],
+        content: 'Test',
+        sources: [{ file: 'raw/test.md' }],
       }],
     });
     const content = await fs.readFile(result.results[0].path!, 'utf-8');
     expect(content).toContain('Johnny');
-    expect(content).toContain('John');
     expect(content).toContain('Mr. Doe');
+  });
+
+  it('should write with info', async () => {
+    const result = await wikiWrite({
+      projectPath: tempDir,
+      entities: [{
+        canonical: 'John Doe',
+        type: 'Person',
+        info: { 部门: '技术部', 职位: '工程师' },
+        content: 'Test',
+        sources: [{ file: 'raw/test.md' }],
+      }],
+    });
+    const content = await fs.readFile(result.results[0].path!, 'utf-8');
+    expect(content).toContain('部门');
+    expect(content).toContain('技术部');
   });
 
   // ============ 错误处理 ============
@@ -150,10 +118,21 @@ describe('wiki-write', () => {
         type: 'Unknown',
         content: 'Test',
         sources: [{ file: 'raw/test.md', lines: [1] }],
-        isUpdate: false,
       }],
     });
     expect(result.results[0].success).toBe(false);
     expect(result.results[0].error).toContain('未知实体类型');
+  });
+
+  it('should return failed count', async () => {
+    const result = await wikiWrite({
+      projectPath: tempDir,
+      entities: [
+        { canonical: 'Good', type: 'Person', content: 'Test', sources: [{ file: 'raw/test.md' }] },
+        { canonical: 'Bad', type: 'Unknown', content: 'Test', sources: [{ file: 'raw/test.md' }] },
+      ],
+    });
+    expect(result.total).toBe(2);
+    expect(result.failed).toBe(1);
   });
 });

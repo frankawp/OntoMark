@@ -11,22 +11,22 @@
 
 ### 第一步：获取上下文
 
-```
+
 1. 调用 ontology-status → 获取可用实体类型
-   如果 ontology.yaml 不存在：
+2. 如果 ontology.yaml 不存在：
       - 扫描 raw/ 目录内容
       - 询问用户知识库的适用场景
       - 基于 ontology.yaml 样例给出本体设计建议
       - 用户确认后写入 ontology.yaml
-2. 调用 raw-status → 获取待处理文件列表
-3. 选择一个待处理文件（用户指定或按顺序）
-```
+3. 调用 raw-status → 获取待处理文件列表
+
+
 
 ### 第二步：读取文档
 
-```
-4. Read → 读取 raw 文档内容
-```
+1. 选择一个待处理文件（用户指定或按顺序）
+2. Read → 读取 raw 文档内容
+
 
 ### 第三步：多层实体提取
 
@@ -45,28 +45,25 @@
 
 ### 第四步：处理 WikiLinks
 
-参考 [wikilinks-annotation.md](./reference/wikilinks-annotation.md) 标注实体引用：
-
-```
-5. 调用 index-query → 检查每个实体是否已存在
-6. 对提取的 content 进行 WikiLinks 标注：
-   - 将实体名称替换为 [[canonical]]
-   - 别名映射到规范名称
-```
+参考 [wikilinks-annotation.md](./reference/wikilinks-annotation.md) 标注实体引用。
 
 ### 第五步：写入 wiki
 
-```
-7. 调用 wiki-write → 批量写入所有实体
+1. 调用 wiki-write → 批量写入所有实体
    - 使用 --file 或 --entities 参数
    - isUpdate: false（新建）或 true（更新）
    - sources 使用字符串格式：["raw/file.md"]
-8. 检查返回结果中的 failed 项
+2. 检查返回结果中的 failed 项
    - 成功：action = 'created' 或 'updated'
    - 失败：error 包含友好提示
-9. 调用 mark-processed → 标记文件已处理
-10. 调用 index-build → 重建索引
-```
+3. 调用 mark-processed → 标记文件已处理
+4. 调用 index-build → 重建索引
+
+注意： 3,4 步骤很重要，能够辅助你记录哪些文件已经ingest过，并保持 wiki索引最新，这样之后查询可以获取到最新信息
+
+索引是全量重建的，每次 index-build 会覆盖旧索引。适合在批量写入实体后调用一次。
+
+
 
 ## 错误处理
 
