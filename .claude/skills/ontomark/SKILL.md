@@ -269,6 +269,6 @@ ontomark lint-all <project-path>
 ## 强制规则
 
 1. **先读后写** — 调用 `wiki-write` 前必须先检索并读取wiki下的实体，确保不重复创建实体并保持一致性。如果存在同名实体，必须进行合并或更新，而不是新建。
-2. **类型来源** — 所有实体类型从 `ontology-status` 获取，不硬编码
+2. **类型来源** — 所有实体类型必须通过 `ontomark ontology-status <project-path>` 命令获取。技能目录下的 `reference/ontology.yaml` 仅为格式样例，切勿直接使用样例中的类型名称。
 3. **来源追溯** — 每个实体必须记录 sources
 4. **WikiLinks 由 LLM 标注** — CLI 不处理语义标注，由技能负责将文本中的实体标注为 WikiLinks，并确保与 wiki 中的实体链接一致。

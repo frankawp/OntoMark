@@ -1,3 +1,7 @@
+# ⚠️ 此文件仅为 ontology.yaml 格式样例
+# 实际项目中必须通过 `ontomark ontology-status <project-path>` 命令获取可用的实体类型
+# 切勿直接使用此样例中的类型名称
+
 version: "1.0"
 entity_types:
   # 核心实体类型

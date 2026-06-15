@@ -2,13 +2,19 @@
 
 > 多层实体提取策略，从文档中识别直接、推断和总结实体。
 
+## 重要前提
+
+**必须先调用 `ontomark ontology-status <project-path>` 获取当前项目可用的实体类型。**
+
+技能目录下的 `ontology.yaml` 仅为格式样例，不代表用户项目的实际类型定义。切勿直接使用样例中的类型名称。
+
 ## Prompt 模板
 
 ```
 你是一个知识提取专家。请从以下文档中提取实体。
 
 ## 实体类型定义
-{此处插入 ontology-status 返回的 entity_types}
+{此处插入 ontology-status 返回的 entityTypes}
 
 ## 提取策略
 
