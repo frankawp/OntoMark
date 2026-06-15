@@ -108,3 +108,9 @@ Connor Bedard 和 Sidney Crosby 在训练中交流。
 4. **中英文空格**：
    - 英文实体：直接替换
    - 中文实体：保留原空格
+
+5. **来源引用不标注**：文档来源路径仅在 frontmatter 的 `sources` 字段记录，不作为 WikiLinks 标注
+   - 正确：`sources: ["raw/cre-knowledge/aggregates/A01-借款工单管理.md"]`
+   - 错误：`来源：[[raw/cre-knowledge/aggregates/A01-借款工单管理.md]]`
+
+   来源是文档级的追溯信息，不是知识库实体，不应建立链接关系
