@@ -87,6 +87,8 @@ export interface WikiWriteResult {
   total: number;
   failed: number;
   results: WikiWriteItemResult[];
+  /** 当存在失败时，返回可用的实体类型列表 */
+  availableEntityTypes?: string[];
 }
 
 // ============ 索引 ============

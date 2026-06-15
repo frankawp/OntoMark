@@ -31,11 +31,18 @@ export async function wikiWrite(input: WikiWriteInput): Promise<WikiWriteResult>
     }
   }
 
-  return {
+  const response: WikiWriteResult = {
     total: entities.length,
     failed,
     results,
   };
+
+  // 如果有失败，添加可用的实体类型列表
+  if (failed > 0) {
+    response.availableEntityTypes = Object.keys(ontology.entityTypes);
+  }
+
+  return response;
 }
 
 /**
