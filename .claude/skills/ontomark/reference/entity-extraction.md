@@ -44,7 +44,7 @@
 ```json
 [
   {
-    "canonical": "实体规范名称",
+    "name": "实体名称",
     "type": "实体类型（必须存在于 entityTypes）",
     "aliases": ["别名1", "别名2"],
     "content": "实体的完整描述，包含所有关键信息",
@@ -65,7 +65,7 @@
 ## 注意事项
 
 1. 所有 type 必须存在于 entityTypes 中
-2. canonical 使用最完整、最规范的名称
+2. name 使用最完整、最规范的名称（同时也是文件名）
 3. aliases 包含文档中出现的其他称呼
 4. content 应包含完整的实体描述，所有关键信息都写在 content 中
 ```

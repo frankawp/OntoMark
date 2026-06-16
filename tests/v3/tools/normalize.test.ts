@@ -61,7 +61,7 @@ describe('normalize', () => {
       expect(parseWikiLinkTarget('Connor Bedard')).toBe('Connor Bedard');
     });
 
-    it('should extract canonical from alias syntax', () => {
+    it('should extract name from alias syntax', () => {
       expect(parseWikiLinkTarget('Connor Bedard|Bedard')).toBe('Connor Bedard');
     });
 
@@ -102,7 +102,7 @@ describe('normalize', () => {
       expect(result).toEqual(['John Doe', 'Jane Smith']);
     });
 
-    it('should extract canonical from alias syntax', () => {
+    it('should extract name from alias syntax', () => {
       const result = extractAndNormalizeWikiLinks('See [[Connor Bedard|Bedard]]');
       expect(result).toEqual(['Connor Bedard']);
     });

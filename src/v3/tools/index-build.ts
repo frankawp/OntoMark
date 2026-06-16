@@ -36,17 +36,18 @@ export async function indexBuild(projectPath: string): Promise<IndexData> {
           try {
             const content = await fs.readFile(fullPath, 'utf-8');
             const parsed = matter(content);
-            const canonical = normalizeEntityName(parsed.data.canonical || '');
-            const type = parsed.data.entity_type;
+            // 兼容旧格式 canonical 和新格式 name
+            const name = normalizeEntityName(parsed.data.name || parsed.data.canonical || '');
+            const type = parsed.data.type || parsed.data.entity_type;
             const entityAliases: string[] = (parsed.data.aliases || []).map((a: string) => normalizeEntityName(a));
 
-            if (canonical && type) {
+            if (name && type) {
               const relativePath = path.relative(wikiDir, fullPath);
-              entities[canonical] = { canonical, type, path: relativePath, aliases: entityAliases };
+              entities[name] = { name, type, path: relativePath, aliases: entityAliases };
               for (const alias of entityAliases) {
                 const normalizedAlias = normalizeEntityName(alias);
                 if (normalizedAlias) {
-                  aliases[normalizedAlias] = canonical;
+                  aliases[normalizedAlias] = name;
                 }
               }
             }

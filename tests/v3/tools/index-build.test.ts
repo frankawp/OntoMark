@@ -29,11 +29,11 @@ describe('index-build', () => {
     await fs.mkdir(personsDir, { recursive: true });
     await fs.writeFile(
       path.join(personsDir, 'John_Doe.md'),
-      '---\ncanonical: John Doe\nentity_type: Person\naliases:\n  - Johnny\n  - JD\n---\n# John Doe'
+      '---\nname: John Doe\nentity_type: Person\naliases:\n  - Johnny\n  - JD\n---\n# John Doe'
     );
     await fs.writeFile(
       path.join(personsDir, 'Jane_Doe.md'),
-      '---\ncanonical: Jane Doe\nentity_type: Person\n---\n# Jane Doe'
+      '---\nname: Jane Doe\nentity_type: Person\n---\n# Jane Doe'
     );
 
     const result = await indexBuild(tempDir);
@@ -48,7 +48,7 @@ describe('index-build', () => {
     await fs.mkdir(personsDir, { recursive: true });
     await fs.writeFile(
       path.join(personsDir, 'Test.md'),
-      '---\ncanonical: Test\nentity_type: Person\n---\n# Test'
+      '---\nname: Test\nentity_type: Person\n---\n# Test'
     );
 
     await indexBuild(tempDir);

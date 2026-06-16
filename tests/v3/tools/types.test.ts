@@ -37,12 +37,12 @@ describe('V3 Tool Types', () => {
   it('should define WikiFileInfo structure', () => {
     const fileInfo: WikiFileInfo = {
       path: 'wiki/test-entity.md',
-      canonical: 'Test Entity',
+      name: 'Test Entity',
       type: 'Person',
       lastModified: '2026-06-13T00:00:00Z',
       humanEdited: true,
     };
-    expect(fileInfo.canonical).toBe('Test Entity');
+    expect(fileInfo.name).toBe('Test Entity');
     expect(fileInfo.humanEdited).toBe(true);
   });
 
@@ -51,14 +51,14 @@ describe('V3 Tool Types', () => {
       files: [
         {
           path: 'wiki/entity1.md',
-          canonical: 'Entity 1',
+          name: 'Entity 1',
           type: 'Person',
           lastModified: '2026-06-13T00:00:00Z',
           humanEdited: false,
         },
         {
           path: 'wiki/entity2.md',
-          canonical: 'Entity 2',
+          name: 'Entity 2',
           type: 'Organization',
           lastModified: '2026-06-12T00:00:00Z',
           humanEdited: true,
@@ -118,20 +118,20 @@ describe('V3 Tool Types', () => {
     const input: WikiWriteInput = {
       projectPath: '/project',
       entities: [{
-        canonical: 'Test Entity',
+        name: 'Test Entity',
         type: 'Person',
         content: 'Test content',
         sources: [{ file: 'raw/test.md', lines: [1] }],
       }],
     };
-    expect(input.entities[0].canonical).toBe('Test Entity');
+    expect(input.entities[0].name).toBe('Test Entity');
   });
 
   it('should handle WikiWriteInput with optional fields', () => {
     const input: WikiWriteInput = {
       projectPath: '/project',
       entities: [{
-        canonical: 'Test Entity',
+        name: 'Test Entity',
         type: 'Person',
         aliases: ['Alias 1', 'Alias 2'],
         content: 'Test content',
@@ -147,7 +147,7 @@ describe('V3 Tool Types', () => {
     const input: WikiWriteInput = {
       projectPath: '/project',
       entities: [{
-        canonical: 'Test Entity',
+        name: 'Test Entity',
         type: 'Person',
         content: 'Test content',
         sources: [{ file: 'raw/test.md', lines: [1] }],
@@ -162,13 +162,13 @@ describe('V3 Tool Types', () => {
   it('should define IndexQueryResult when entity found', () => {
     const result: IndexQueryResult = {
       found: true,
-      canonical: 'Test Entity',
+      name: 'Test Entity',
       type: 'Person',
       path: 'wiki/test-entity.md',
       aliases: ['Alias 1', 'Alias 2'],
     };
     expect(result.found).toBe(true);
-    expect(result.canonical).toBe('Test Entity');
+    expect(result.name).toBe('Test Entity');
     expect(result.aliases).toEqual(['Alias 1', 'Alias 2']);
   });
 
@@ -177,14 +177,14 @@ describe('V3 Tool Types', () => {
       found: false,
     };
     expect(result.found).toBe(false);
-    expect(result.canonical).toBeUndefined();
+    expect(result.name).toBeUndefined();
     expect(result.type).toBeUndefined();
   });
 
   it('should handle IndexQueryResult without aliases', () => {
     const result: IndexQueryResult = {
       found: true,
-      canonical: 'Test Entity',
+      name: 'Test Entity',
       type: 'Person',
       path: 'wiki/test-entity.md',
     };

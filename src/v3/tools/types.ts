@@ -23,7 +23,7 @@ export interface RawStatusResult {
 
 export interface WikiFileInfo {
   path: string;
-  canonical: string;
+  name: string;
   type: string;
   lastModified: string;
   humanEdited: boolean;
@@ -58,7 +58,7 @@ export interface OntologyStatusResult {
 export type SourceRef = string | { file: string; lines?: number[] };
 
 export interface WikiWriteEntity {
-  canonical: string;
+  name: string;
   type: string;
   aliases?: string[];
   content: string;
@@ -72,7 +72,7 @@ export interface WikiWriteInput {
 }
 
 export interface WikiWriteItemResult {
-  canonical: string;
+  name: string;
   success: boolean;
   path?: string;
   error?: string;
@@ -90,14 +90,14 @@ export interface WikiWriteResult {
 
 export interface IndexQueryResult {
   found: boolean;
-  canonical?: string;
+  name?: string;
   type?: string;
   path?: string;
   aliases?: string[];
 }
 
 export interface IndexEntity {
-  canonical: string;
+  name: string;
   type: string;
   path: string;
   aliases: string[];

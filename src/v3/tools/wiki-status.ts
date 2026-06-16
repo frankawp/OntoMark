@@ -28,10 +28,11 @@ export async function wikiStatus(projectPath: string): Promise<WikiStatusResult>
             const humanEdited = content.includes('<!-- human-edited -->') ||
               parsed.content.includes('<!-- user-content -->');
 
+            // 兼容旧格式 canonical 和新格式 name
             files.push({
               path: path.relative(wikiDir, fullPath),
-              canonical: parsed.data.canonical || path.basename(entry.name, '.md'),
-              type: parsed.data.entity_type || 'Unknown',
+              name: parsed.data.name || parsed.data.canonical || path.basename(entry.name, '.md'),
+              type: parsed.data.type || parsed.data.entity_type || 'Unknown',
               lastModified: stats.mtime.toISOString(),
               humanEdited,
             });

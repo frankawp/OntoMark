@@ -22,7 +22,7 @@ describe('lint-missing', () => {
     await fs.mkdir(personsDir, { recursive: true });
     await fs.writeFile(
       path.join(personsDir, 'Existing.md'),
-      '---\ncanonical: Existing\nentity_type: Person\n---\n# Existing\n\nReferences [[Missing Person]] and [[Another Missing]].'
+      '---\nname: Existing\nentity_type: Person\n---\n# Existing\n\nReferences [[Missing Person]] and [[Another Missing]].'
     );
 
     const result = await lintMissing(tempDir);
@@ -36,9 +36,9 @@ describe('lint-missing', () => {
     await fs.mkdir(personsDir, { recursive: true });
     await fs.writeFile(
       path.join(personsDir, 'A.md'),
-      '---\ncanonical: A\nentity_type: Person\n---\n# A\n\nSee [[B]].'
+      '---\nname: A\nentity_type: Person\n---\n# A\n\nSee [[B]].'
     );
-    await fs.writeFile(path.join(personsDir, 'B.md'), '---\ncanonical: B\nentity_type: Person\n---\n# B');
+    await fs.writeFile(path.join(personsDir, 'B.md'), '---\nname: B\nentity_type: Person\n---\n# B');
 
     const result = await lintMissing(tempDir);
     expect(result.missing).toHaveLength(0);
@@ -49,7 +49,7 @@ describe('lint-missing', () => {
     await fs.mkdir(personsDir, { recursive: true });
     await fs.writeFile(
       path.join(personsDir, 'Existing.md'),
-      '---\ncanonical: Existing\nentity_type: Person\n---\n# Existing\n\nReferences [[Missing Person|Someone]] and [[Existing|Self]].'
+      '---\nname: Existing\nentity_type: Person\n---\n# Existing\n\nReferences [[Missing Person|Someone]] and [[Existing|Self]].'
     );
 
     const result = await lintMissing(tempDir);

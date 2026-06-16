@@ -139,7 +139,7 @@ ontomark wiki-status <project-path>
 
 输出：
 {
-  "files": [{ "path": "wiki/Person/张三.md", "canonical": "张三", "type": "Person" }],
+  "files": [{ "path": "wiki/Person/张三.md", "name": "张三", "type": "Person" }],
   "total": 15
 }
 
@@ -171,18 +171,18 @@ ontomark mark-processed <project-path> --files '["raw/a.md","raw/b.md"]'
 6. wiki-write — 写入实体
 
 # 命令行 JSON
-ontomark wiki-write <project-path> --entities '[{"canonical":"张三","type":"Person",...}]'
+ontomark wiki-write <project-path> --entities '[{"name":"张三","type":"Person",...}]'
 
 # 单个实体
 ontomark wiki-write <project-path> \
-  --canonical "张三" \
+  --name "张三" \
   --type "Person" \
   --content "描述内容" \
   --sources '["raw/meeting.md"]'
 
 实体格式：
 {
-  canonical: string;        // 规范名称（必需）
+  name: string;             // 实体名称（必需）
   type: string;             // 实体类型（必需）
   content: string;          // 描述内容（必需）
   sources: SourceRef[];     // 来源（必需）
@@ -195,7 +195,7 @@ ontomark wiki-write <project-path> \
   "total": 3,
   "failed": 0,
   "results": [
-    { "canonical": "张三", "success": true, "path": "wiki/Person/张三.md" }
+    { "name": "张三", "success": true, "path": "wiki/Person/张三.md" }
   ]
 }
 
@@ -216,7 +216,7 @@ ontomark index-query <project-path> <name>
 ontomark index-query <project-path> <name> --fuzzy
 
 输出：
-{ "found": true, "canonical": "张三", "type": "Person", "path": "Person/张三.md", "aliases": ["老张"] }
+{ "found": true, "name": "张三", "type": "Person", "path": "Person/张三.md", "aliases": ["老张"] }
 
 ---
 9. lint-all — 健康检查

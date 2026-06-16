@@ -10,7 +10,7 @@ describe('wiki-write', () => {
   const makeInput = (overrides: Partial<WikiWriteInput> = {}): WikiWriteInput => ({
     projectPath: tempDir,
     entities: [{
-      canonical: 'John Doe',
+      name: 'John Doe',
       type: 'Person',
       content: 'Test content',
       sources: [{ file: 'raw/test.md', lines: [1] }],
@@ -38,15 +38,15 @@ describe('wiki-write', () => {
     expect(result.results[0].success).toBe(true);
 
     const content = await fs.readFile(result.results[0].path!, 'utf-8');
-    expect(content).toContain('canonical: John Doe');
-    expect(content).toContain('entity_type: Person');
+    expect(content).toContain('name: John Doe');
+    expect(content).toContain('type: Person');
   });
 
-  it('should create page with multi-byte canonical name', async () => {
+  it('should create page with multi-byte name name', async () => {
     const result = await wikiWrite({
       projectPath: tempDir,
       entities: [{
-        canonical: 'Beyoncé',
+        name: 'Beyoncé',
         type: 'Person',
         content: 'Singer',
         sources: [{ file: 'raw/test.md' }],
@@ -55,7 +55,7 @@ describe('wiki-write', () => {
     expect(result.results[0].success).toBe(true);
     // 文件名应保留 é 字符
     const content = await fs.readFile(result.results[0].path!, 'utf-8');
-    expect(content).toContain('canonical: Beyoncé');
+    expect(content).toContain('name: Beyoncé');
   });
 
   it('should overwrite existing page', async () => {
@@ -64,7 +64,7 @@ describe('wiki-write', () => {
     await fs.mkdir(personsDir, { recursive: true });
     await fs.writeFile(
       path.join(personsDir, 'John_Doe.md'),
-      '---\ncanonical: John Doe\nentity_type: Person\nsources: []\n---\n# John Doe\n\nOriginal.'
+      '---\nname: John Doe\nentity_type: Person\nsources: []\n---\n# John Doe\n\nOriginal.'
     );
 
     // 再次写入覆盖
@@ -80,7 +80,7 @@ describe('wiki-write', () => {
     const result = await wikiWrite({
       projectPath: tempDir,
       entities: [{
-        canonical: 'John Doe',
+        name: 'John Doe',
         type: 'Person',
         aliases: ['Johnny', 'Mr. Doe'],
         content: 'Test',
@@ -99,7 +99,7 @@ describe('wiki-write', () => {
     const result = await wikiWrite({
       projectPath: tempDir,
       entities: [{
-        canonical: 'Test',
+        name: 'Test',
         type: 'Unknown',
         content: 'Test',
         sources: [{ file: 'raw/test.md', lines: [1] }],
@@ -113,8 +113,8 @@ describe('wiki-write', () => {
     const result = await wikiWrite({
       projectPath: tempDir,
       entities: [
-        { canonical: 'Good', type: 'Person', content: 'Test', sources: [{ file: 'raw/test.md' }] },
-        { canonical: 'Bad', type: 'Unknown', content: 'Test', sources: [{ file: 'raw/test.md' }] },
+        { name: 'Good', type: 'Person', content: 'Test', sources: [{ file: 'raw/test.md' }] },
+        { name: 'Bad', type: 'Unknown', content: 'Test', sources: [{ file: 'raw/test.md' }] },
       ],
     });
     expect(result.total).toBe(2);

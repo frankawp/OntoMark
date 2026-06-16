@@ -54,7 +54,7 @@ entity_types:
     const writeResult = await wikiWrite({
       projectPath: tempDir,
       entities: [{
-        canonical: 'John Doe',
+        name: 'John Doe',
         type: 'Person',
         content: 'Test content',
         sources: [{ file: 'raw/test.md', lines: [1] }],

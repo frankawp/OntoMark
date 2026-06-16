@@ -26,10 +26,11 @@ export async function lintAll(projectPath: string): Promise<LintAllResult> {
           try {
             const content = await fs.readFile(fullPath, 'utf-8');
             const parsed = matter(content);
-            const canonical = normalizeEntityName(parsed.data.canonical || '');
+            // 兼容旧格式 canonical 和新格式 name
+            const name = normalizeEntityName(parsed.data.name || parsed.data.canonical || '');
             const bodyText = parsed.content.replace(/\s+/g, '').replace(/#+\s*/g, '');
-            if (canonical && bodyText.length < 50) {
-              empty.push(canonical);
+            if (name && bodyText.length < 50) {
+              empty.push(name);
             }
           } catch {}
         }

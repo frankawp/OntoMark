@@ -15,8 +15,8 @@ describe('index-query', () => {
 
     const indexData: IndexData = {
       entities: {
-        'John Doe': { canonical: 'John Doe', type: 'Person', path: 'Persons/John_Doe.md', aliases: ['Johnny', 'JD'] },
-        'Jane Doe': { canonical: 'Jane Doe', type: 'Person', path: 'Persons/Jane_Doe.md', aliases: [] },
+        'John Doe': { name: 'John Doe', type: 'Person', path: 'Persons/John_Doe.md', aliases: ['Johnny', 'JD'] },
+        'Jane Doe': { name: 'Jane Doe', type: 'Person', path: 'Persons/Jane_Doe.md', aliases: [] },
       },
       aliases: { Johnny: 'John Doe', JD: 'John Doe' },
     };
@@ -27,17 +27,17 @@ describe('index-query', () => {
     await fs.rm(tempDir, { recursive: true, force: true });
   });
 
-  it('should find entity by canonical name', async () => {
+  it('should find entity by name name', async () => {
     const result = await indexQuery(tempDir, 'John Doe');
     expect(result.found).toBe(true);
-    expect(result.canonical).toBe('John Doe');
+    expect(result.name).toBe('John Doe');
     expect(result.type).toBe('Person');
   });
 
   it('should find entity by alias', async () => {
     const result = await indexQuery(tempDir, 'Johnny');
     expect(result.found).toBe(true);
-    expect(result.canonical).toBe('John Doe');
+    expect(result.name).toBe('John Doe');
   });
 
   it('should return not found for unknown name', async () => {
@@ -61,19 +61,19 @@ describe('index-query', () => {
     it('should find prefix match', async () => {
       const result = await indexQuery(tempDir, 'John', true);
       expect(result.found).toBe(true);
-      expect(result.canonical).toBe('John Doe');
+      expect(result.name).toBe('John Doe');
     });
 
     it('should prefer exact over prefix match', async () => {
       const result = await indexQuery(tempDir, 'Jane Doe', true);
       expect(result.found).toBe(true);
-      expect(result.canonical).toBe('Jane Doe');
+      expect(result.name).toBe('Jane Doe');
     });
 
     it('should find case-insensitive match', async () => {
       const result = await indexQuery(tempDir, 'john doe', true);
       expect(result.found).toBe(true);
-      expect(result.canonical).toBe('John Doe');
+      expect(result.name).toBe('John Doe');
     });
 
     it('should return not found for unrelated query', async () => {
@@ -84,7 +84,7 @@ describe('index-query', () => {
     it('should match by alias in fuzzy mode', async () => {
       const result = await indexQuery(tempDir, 'Johnny', true);
       expect(result.found).toBe(true);
-      expect(result.canonical).toBe('John Doe');
+      expect(result.name).toBe('John Doe');
     });
   });
 });

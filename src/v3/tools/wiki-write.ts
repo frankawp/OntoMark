@@ -53,41 +53,40 @@ async function writeSingleEntity(
   entity: WikiWriteEntity,
   entityTypes: Record<string, any>
 ): Promise<WikiWriteItemResult> {
-  const { canonical: rawCanonical, type, aliases: rawAliases, content: rawContent, sources, needsReview } = entity;
+  const { name: rawName, type, aliases: rawAliases, content: rawContent, sources, needsReview } = entity;
 
   // 规范化名称
-  const canonical = normalizeEntityName(rawCanonical);
+  const name = normalizeEntityName(rawName);
   const aliases = rawAliases?.map(a => normalizeEntityName(a));
   const content = normalizeWikiLinksInText(rawContent);
 
   // 验证实体类型
   if (!entityTypes[type]) {
     return {
-      canonical,
+      name,
       success: false,
       error: `未知实体类型: ${type}。可用类型: ${Object.keys(entityTypes).join(', ')}`,
     };
   }
 
   // 构建文件路径
-  const sanitizedName = canonical
+  const sanitizedName = name
     .replace(/\s+/g, '_')
     .replace(/[^\w\-一-鿿À-ɏ]/g, '');
   const filePath = path.join(projectPath, 'wiki', type, `${sanitizedName}.md`);
 
   // 构建 frontmatter
   const frontmatter: Record<string, any> = {
-    canonical,
-    entity_type: type,
+    name,
+    type,
     sources: normalizeSources(sources),
-    status: needsReview ? 'draft' : 'canonical',
     last_updated: new Date().toISOString().split('T')[0],
   };
 
   if (aliases?.length) frontmatter.aliases = aliases;
   if (needsReview) frontmatter.needs_review = true;
 
-  const body = generatePageBody(canonical, content, sources);
+  const body = generatePageBody(name, content, sources);
 
   // 写入文件
   try {
@@ -95,13 +94,13 @@ async function writeSingleEntity(
     await fs.writeFile(filePath, matter.stringify(body, frontmatter), 'utf-8');
 
     return {
-      canonical,
+      name,
       success: true,
       path: filePath,
     };
   } catch (err) {
     return {
-      canonical,
+      name,
       success: false,
       error: `写入文件失败: ${err}`,
     };
@@ -124,12 +123,12 @@ function normalizeSources(sources: SourceRef[]): Array<{ file: string; lines?: n
  * 生成页面内容
  */
 function generatePageBody(
-  canonical: string,
+  name: string,
   content: string,
   sources: SourceRef[]
 ): string {
   const lines: string[] = [];
-  lines.push(`# ${canonical}`, '', content, '');
+  lines.push(`# ${name}`, '', content, '');
 
   lines.push('## 来源', '');
   for (const source of sources) {

@@ -21,9 +21,9 @@ describe('lint-orphans', () => {
     const personsDir = path.join(wikiDir, 'Persons');
     await fs.mkdir(personsDir, { recursive: true });
     await fs.writeFile(path.join(personsDir, 'Orphan.md'),
-      '---\ncanonical: Orphan\nentity_type: Person\n---\n# Orphan\n\nNo incoming links.');
+      '---\nname: Orphan\nentity_type: Person\n---\n# Orphan\n\nNo incoming links.');
     await fs.writeFile(path.join(personsDir, 'Linked.md'),
-      '---\ncanonical: Linked\nentity_type: Person\n---\n# Linked\n\nReferences [[Orphan]].');
+      '---\nname: Linked\nentity_type: Person\n---\n# Linked\n\nReferences [[Orphan]].');
 
     const result = await lintOrphans(tempDir);
     expect(result.orphans).toContain('Linked');
@@ -34,9 +34,9 @@ describe('lint-orphans', () => {
     const personsDir = path.join(wikiDir, 'Persons');
     await fs.mkdir(personsDir, { recursive: true });
     await fs.writeFile(path.join(personsDir, 'A.md'),
-      '---\ncanonical: A\nentity_type: Person\n---\n# A\n\nSee [[B]].');
+      '---\nname: A\nentity_type: Person\n---\n# A\n\nSee [[B]].');
     await fs.writeFile(path.join(personsDir, 'B.md'),
-      '---\ncanonical: B\nentity_type: Person\n---\n# B\n\nSee [[A]].');
+      '---\nname: B\nentity_type: Person\n---\n# B\n\nSee [[A]].');
 
     const result = await lintOrphans(tempDir);
     expect(result.orphans).toHaveLength(0);
@@ -47,9 +47,9 @@ describe('lint-orphans', () => {
     await fs.mkdir(personsDir, { recursive: true });
     // A 用别名语法引用 B
     await fs.writeFile(path.join(personsDir, 'A.md'),
-      '---\ncanonical: A\nentity_type: Person\n---\n# A\n\nSee [[B|Bee]].');
+      '---\nname: A\nentity_type: Person\n---\n# A\n\nSee [[B|Bee]].');
     await fs.writeFile(path.join(personsDir, 'B.md'),
-      '---\ncanonical: B\nentity_type: Person\n---\n# B');
+      '---\nname: B\nentity_type: Person\n---\n# B');
 
     const result = await lintOrphans(tempDir);
     expect(result.orphans).toContain('A');

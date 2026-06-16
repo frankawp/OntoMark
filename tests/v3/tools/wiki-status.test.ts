@@ -29,14 +29,14 @@ describe('wiki-status', () => {
     await fs.mkdir(personsDir, { recursive: true });
 
     const content = `---
-canonical: John Doe
+name: John Doe
 entity_type: Person
 aliases:
   - Johnny
 sources:
   - file: raw/test.md
     lines: [1]
-status: canonical
+status: name
 last_updated: 2026-06-13
 ---
 # John Doe
@@ -47,15 +47,15 @@ Test content.`;
 
     const result = await wikiStatus(tempDir);
     expect(result.total).toBe(1);
-    expect(result.files[0].canonical).toBe('John Doe');
+    expect(result.files[0].name).toBe('John Doe');
     expect(result.files[0].type).toBe('Person');
   });
 
   it('should detect human edited pages', async () => {
     const content = `---
-canonical: Test
+name: Test
 entity_type: Topic
-status: canonical
+status: name
 last_updated: 2026-06-13
 ---
 # Test

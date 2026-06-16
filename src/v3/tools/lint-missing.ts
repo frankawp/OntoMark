@@ -8,7 +8,7 @@ import { normalizeEntityName, parseWikiLinkTarget } from './normalize';
  * 检查缺失链接（引用了不存在的实体）
  *
  * 两遍扫描：
- * 1. 先收集所有实体的规范名称
+ * 1. 先收集所有实体的名称
  * 2. 再遍历所有文件检查 WikiLinks，引用不在集合中的即为缺失
  */
 export async function lintMissing(projectPath: string): Promise<LintMissingResult> {
@@ -24,7 +24,7 @@ export async function lintMissing(projectPath: string): Promise<LintMissingResul
 }
 
 /**
- * 收集所有实体的规范名称
+ * 收集所有实体的名称
  */
 async function collectEntityNames(wikiDir: string): Promise<Set<string>> {
   const entities = new Set<string>();
@@ -40,9 +40,10 @@ async function collectEntityNames(wikiDir: string): Promise<Set<string>> {
           try {
             const content = await fs.readFile(fullPath, 'utf-8');
             const parsed = matter(content);
-            const canonical = parsed.data.canonical;
-            if (canonical) {
-              entities.add(normalizeEntityName(canonical));
+            // 兼容旧格式 canonical 和新格式 name
+            const name = parsed.data.name || parsed.data.canonical;
+            if (name) {
+              entities.add(normalizeEntityName(name));
             }
           } catch { /* 跳过无法解析的文件 */ }
         }
@@ -74,7 +75,8 @@ async function findMissingLinks(
           try {
             const content = await fs.readFile(fullPath, 'utf-8');
             const parsed = matter(content);
-            const source = normalizeEntityName(parsed.data.canonical || '');
+            // 兼容旧格式 canonical 和新格式 name
+            const source = normalizeEntityName(parsed.data.name || parsed.data.canonical || '');
             if (!source) continue;
 
             const linkPattern = /\[\[([^\]]+)\]\]/g;

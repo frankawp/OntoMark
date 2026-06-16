@@ -22,11 +22,11 @@ describe('lint-all', () => {
     await fs.mkdir(personsDir, { recursive: true });
     await fs.writeFile(
       path.join(personsDir, 'Orphan.md'),
-      '---\ncanonical: Orphan\nentity_type: Person\n---\n# Orphan'
+      '---\nname: Orphan\nentity_type: Person\n---\n# Orphan'
     );
     await fs.writeFile(
       path.join(personsDir, 'WithMissing.md'),
-      '---\ncanonical: WithMissing\nentity_type: Person\n---\n# WithMissing\n\nSee [[NonExistent]].'
+      '---\nname: WithMissing\nentity_type: Person\n---\n# WithMissing\n\nSee [[NonExistent]].'
     );
 
     const result = await lintAll(tempDir);
@@ -41,7 +41,7 @@ describe('lint-all', () => {
     await fs.mkdir(personsDir, { recursive: true });
     await fs.writeFile(
       path.join(personsDir, 'Empty.md'),
-      '---\ncanonical: Empty\nentity_type: Person\n---\n# Empty'
+      '---\nname: Empty\nentity_type: Person\n---\n# Empty'
     );
 
     const result = await lintAll(tempDir);

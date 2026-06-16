@@ -136,7 +136,7 @@ program
   .command('wiki-write <project-path>')
   .description('写入 wiki 页面（覆盖写入）')
   .option('--entities <json>', '实体列表 JSON')
-  .option('--canonical <name>', '规范名称（单个实体时使用）')
+  .option('--name <name>', '实体名称（单个实体时使用）')
   .option('--type <type>', '实体类型（单个实体时使用）')
   .option('--content <content>', '内容（单个实体时使用）')
   .option('--sources <json>', '来源（字符串数组或对象数组）')
@@ -148,10 +148,10 @@ program
     if (options.entities) {
       // 从命令行参数读取
       entities = safeJsonParse<WikiWriteEntity[]>(options.entities, '--entities');
-    } else if (options.canonical && options.type && options.content && options.sources) {
+    } else if (options.name && options.type && options.content && options.sources) {
       // 单个实体模式
       entities = [{
-        canonical: options.canonical,
+        name: options.name,
         type: options.type,
         content: options.content,
         sources: safeJsonParse<Array<{ file: string; lines?: number[] }>>(options.sources, '--sources'),
@@ -161,8 +161,8 @@ program
     } else {
       console.error('错误：请提供 --entities 或完整的单个实体参数');
       console.error('用法示例：');
-      console.error('  批量：ontomark wiki-write . --entities \'[{"canonical":"X","type":"Person",...}]\'');
-      console.error('  单个：ontomark wiki-write . --canonical "X" --type Person --content "..." --sources \'["raw/a.md"]\'');
+      console.error('  批量：ontomark wiki-write . --entities \'[{"name":"X","type":"Person",...}]\'');
+      console.error('  单个：ontomark wiki-write . --name "X" --type Person --content "..." --sources \'["raw/a.md"]\'');
       process.exit(1);
     }
 

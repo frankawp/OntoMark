@@ -23,17 +23,18 @@ export async function lintOrphans(projectPath: string): Promise<LintOrphansResul
           try {
             const content = await fs.readFile(fullPath, 'utf-8');
             const parsed = matter(content);
-            const canonical = parsed.data.canonical;
+            // 兼容旧格式 canonical 和新格式 name
+            const name = parsed.data.name || parsed.data.canonical;
 
-            if (canonical) {
-              entities.add(canonical);
+            if (name) {
+              entities.add(name);
               const linkPattern = /\[\[([^\]]+)\]\]/g;
               let match;
               while ((match = linkPattern.exec(parsed.content)) !== null) {
                 const target = parseWikiLinkTarget(match[1]);
                 if (target) {
                   if (!incomingLinks.has(target)) incomingLinks.set(target, new Set());
-                  incomingLinks.get(target)!.add(canonical);
+                  incomingLinks.get(target)!.add(name);
                 }
               }
             }

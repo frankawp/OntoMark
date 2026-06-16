@@ -50,7 +50,7 @@
 
 ## Topic 页面命名规则
 
-- 使用用户问题的核心概念作为 canonical
+- 使用用户问题的核心概念作为 name（同时也是文件名）
 - 自动关联涉及的实体（WikiLinks）
 - 标记 `needs_review: false`（用户已确认）
 - sources 包含所有引用的实体

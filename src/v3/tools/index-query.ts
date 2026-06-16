@@ -3,8 +3,8 @@ import * as path from 'path';
 import { IndexQueryResult, IndexData } from './types';
 
 interface Candidate {
-  canonical: string;
-  entity: { canonical: string; type: string; path: string; aliases: string[] };
+  name: string;
+  entity: { name: string; type: string; path: string; aliases: string[] };
   score: number; // 匹配分数：3=完全匹配, 2=别名匹配, 1.5=前缀匹配, 1=包含匹配
 }
 
@@ -12,7 +12,7 @@ interface Candidate {
  * 查询实体索引
  *
  * 匹配优先级：
- * 1. 完全匹配规范名称
+ * 1. 完全匹配名称
  * 2. 别名完全匹配
  * 3. 前缀匹配（名称以查询开头）
  * 4. 包含匹配（名称包含查询）
@@ -37,18 +37,18 @@ export async function indexQuery(
       return { found: false };
     }
 
-    // 1. 完全匹配规范名称
+    // 1. 完全匹配名称
     if (data.entities[name]) {
       const entity = data.entities[name];
-      return { found: true, canonical: entity.canonical, type: entity.type, path: entity.path, aliases: entity.aliases };
+      return { found: true, name: entity.name, type: entity.type, path: entity.path, aliases: entity.aliases };
     }
 
     // 2. 别名完全匹配
     if (data.aliases[name]) {
-      const canonical = data.aliases[name];
-      const entity = data.entities[canonical];
+      const entityName = data.aliases[name];
+      const entity = data.entities[entityName];
       if (entity) {
-        return { found: true, canonical: entity.canonical, type: entity.type, path: entity.path, aliases: entity.aliases };
+        return { found: true, name: entity.name, type: entity.type, path: entity.path, aliases: entity.aliases };
       }
     }
 
@@ -61,25 +61,25 @@ export async function indexQuery(
     const lowerName = name.toLowerCase();
     const candidates: Candidate[] = [];
 
-    for (const [canonical, entity] of Object.entries(data.entities)) {
-      const lowerCanonical = canonical.toLowerCase();
+    for (const [entityName, entity] of Object.entries(data.entities)) {
+      const lowerEntityName = entityName.toLowerCase();
 
-      if (lowerCanonical === lowerName) {
+      if (lowerEntityName === lowerName) {
         // 大小写不同的完全匹配（比完全一样低一分，但比模糊匹配高）
-        candidates.push({ canonical, entity, score: 2.5 });
-      } else if (lowerCanonical.startsWith(lowerName)) {
-        candidates.push({ canonical, entity, score: 1.5 });
-      } else if (lowerCanonical.includes(lowerName)) {
-        candidates.push({ canonical, entity, score: 1 });
+        candidates.push({ name: entityName, entity, score: 2.5 });
+      } else if (lowerEntityName.startsWith(lowerName)) {
+        candidates.push({ name: entityName, entity, score: 1.5 });
+      } else if (lowerEntityName.includes(lowerName)) {
+        candidates.push({ name: entityName, entity, score: 1 });
       } else {
         // 检查别名是否匹配
         for (const alias of entity.aliases) {
           const lowerAlias = alias.toLowerCase();
           if (lowerAlias === lowerName) {
-            candidates.push({ canonical, entity, score: 2 });
+            candidates.push({ name: entityName, entity, score: 2 });
             break;
           } else if (lowerAlias.includes(lowerName)) {
-            candidates.push({ canonical, entity, score: 0.8 });
+            candidates.push({ name: entityName, entity, score: 0.8 });
             break;
           }
         }
@@ -93,7 +93,7 @@ export async function indexQuery(
       const best = candidates[0];
       return {
         found: true,
-        canonical: best.entity.canonical,
+        name: best.entity.name,
         type: best.entity.type,
         path: best.entity.path,
         aliases: best.entity.aliases,
