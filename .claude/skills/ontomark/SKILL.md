@@ -5,16 +5,7 @@ description: Use when building or querying an OntoMark wiki knowledge base. Trig
 
 # OntoMark Skill
 
-> 将文档转化为持久化知识库。入口：`/ontomark`（也可直接调用子命令）
-
-## 命令速查
-
-| 命令 | 用途 |
-|------|------|
-| `/ontomark-init` | 初始化项目结构 |
-| `/ontomark-ingest` | 从 raw 文档提取实体，写入 wiki |
-| `/ontomark-query` | 查询 wiki 知识，生成回答 |
-| `/ontomark-lint` | 检查 wiki 健康状态 |
+> 将文档转化为持久化知识库。入口：`/ontomark`
 
 ## CLI检查
 - 在执行任何操作前，技能必须检查 `ontomark` CLI 是否已安装并可在当前环境中调用，以及是否具有执行权限。如果没有安装，技能应提示用户安装指南或提供相关链接。
@@ -23,16 +14,14 @@ description: Use when building or querying an OntoMark wiki knowledge base. Trig
 
 根据用户输入判断工作流：
 
-| 关键词模式 | 工作流 | 快捷命令 |
-|-----------|--------|---------|
-| 初始化/创建项目/init | Init | `/ontomark-init` |
-| 处理/添加/导入/ingest | Ingest | `/ontomark-ingest` |
-| 谁/什么/查询/query | Query | `/ontomark-query` |
-| 检查/lint/健康/孤立 | Lint | `/ontomark-lint` |
+| 关键词模式 | 工作流 | 子命令 |
+|-----------|--------|--------|
+| 处理/添加/导入/ingest | Ingest | `/ontomark ingest` |
+| 谁/什么/查询/query | Query | `/ontomark query` |
+| 检查/lint/健康/孤立 | Lint | `/ontomark lint` |
 
 ## 工作流
 
-- **[Init](./init.md)** — 初始化项目结构
 - **[Ingest](./ingest.md)** — 从 raw 文档提取实体，写入 wiki
 - **[Query](./query.md)** — 查询 wiki 知识，生成回答
 - **[Lint](./lint.md)** — 检查 wiki 健康状态，建议修复
@@ -43,7 +32,6 @@ description: Use when building or querying an OntoMark wiki knowledge base. Trig
 2. **类型来源** — 所有实体类型从 `ontology-status` 获取，不硬编码
 3. **来源追溯** — 每个实体必须记录 sources
 4. **WikiLinks 由 LLM 标注** — CLI 不处理语义标注
-5. **直接调用子命令** — 用户明确指定时，直接加载对应工作流文件而非走意图识别
 
 ## CLI 工具速查
 
