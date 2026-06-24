@@ -1,9 +1,10 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
+import { execSync } from 'child_process';
 import {
   ontologyStatus,
-  rawStatus,
+  pendingFiles,
   wikiStatus,
   markProcessed,
   wikiWrite,
@@ -43,12 +44,16 @@ entity_types:
     const ontology = await ontologyStatus(tempDir);
     expect(ontology.exists).toBe(true);
 
-    // 2. 添加 raw 文件
+    // 2. 添加 raw 文件并提交
     await fs.writeFile(path.join(rawDir, 'test.md'), '# Test Document\n\nContent about John Doe.');
+    execSync('git init', { cwd: tempDir });
+    execSync('git config user.email test@test.com', { cwd: tempDir });
+    execSync('git config user.name Tester', { cwd: tempDir });
+    execSync('git add -A', { cwd: tempDir });
+    execSync('git commit -m "init"', { cwd: tempDir });
 
-    const raw = await rawStatus(tempDir);
-    expect(raw.total).toBe(1);
-    expect(raw.pending).toBe(1);
+    const pending = await pendingFiles(tempDir);
+    expect(pending.total).toBe(1);
 
     // 3. 写入 wiki
     const writeResult = await wikiWrite({
@@ -64,10 +69,10 @@ entity_types:
     expect(writeResult.results[0].success).toBe(true);
 
     // 4. 标记已处理
-    await markProcessed(tempDir, 'raw/test.md');
+    await markProcessed(tempDir);
 
-    const rawAfter = await rawStatus(tempDir);
-    expect(rawAfter.pending).toBe(0);
+    const pendingAfter = await pendingFiles(tempDir);
+    expect(pendingAfter.total).toBe(0);
 
     // 5. 构建索引
     await indexBuild(tempDir);

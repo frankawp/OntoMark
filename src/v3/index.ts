@@ -1,5 +1,5 @@
 export * from './tools/types';
-export { rawStatus } from './tools/raw-status';
+export { pendingFiles } from './tools/pending-files';
 export { wikiStatus } from './tools/wiki-status';
 export { ontologyStatus } from './tools/ontology-status';
 export { markProcessed, markProcessedBatch } from './tools/mark-processed';

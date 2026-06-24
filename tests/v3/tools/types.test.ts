@@ -1,5 +1,5 @@
 import {
-  RawStatusResult,
+  PendingFilesResult,
   WikiStatusResult,
   WikiFileInfo,
   OntologyStatusResult,
@@ -8,26 +8,16 @@ import {
   LintOrphansResult,
   LintMissingResult,
   LintAllResult,
-  ProcessedFile,
   MissingLink,
 } from '../../../src/v3/tools/types';
 
 describe('V3 Tool Types', () => {
-  it('should define ProcessedFile structure', () => {
-    const file: ProcessedFile = {
-      path: 'raw/test.md',
-      lastProcessed: '2026-06-13T00:00:00Z',
-      hash: 'abc123',
-      modified: false,
-    };
-    expect(file.path).toBe('raw/test.md');
-  });
-
-  it('should define RawStatusResult structure', () => {
-    const result: RawStatusResult = {
+  it('should define PendingFilesResult structure', () => {
+    const result: PendingFilesResult = {
       files: [],
       total: 0,
-      pending: 0,
+      ontologyChanged: false,
+      lastHash: '',
     };
     expect(result.total).toBe(0);
   });
@@ -271,23 +261,4 @@ describe('V3 Tool Types', () => {
     expect(result.totalIssues).toBe(0);
   });
 
-  // ============ 边界情况测试 ============
-
-  it('should handle ProcessedFile without lastProcessed', () => {
-    const file: ProcessedFile = {
-      path: 'raw/test.md',
-      hash: 'abc123',
-      modified: true,
-    };
-    expect(file.lastProcessed).toBeUndefined();
-  });
-
-  it('should handle ProcessedFile with empty path', () => {
-    const file: ProcessedFile = {
-      path: '',
-      hash: 'abc123',
-      modified: false,
-    };
-    expect(file.path).toBe('');
-  });
 });
