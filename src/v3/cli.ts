@@ -2,7 +2,7 @@
 
 import { Command } from 'commander';
 import * as fs from 'fs';
-import { rawStatus } from './tools/raw-status';
+import { pendingFiles } from './tools/pending-files';
 import { wikiStatus } from './tools/wiki-status';
 import { ontologyStatus } from './tools/ontology-status';
 import { markProcessed, markProcessedBatch } from './tools/mark-processed';
@@ -76,22 +76,18 @@ program
     await skillUninstall();
   });
 
-// 文件状态工具
+// 待处理文件检测
 program
-  .command('raw-status <project-path>')
-  .description('查询 raw 文件状态')
-  .option('--modified <value>', '过滤条件: true=待处理, false=已处理, all=全部 (默认 true)', (v) => {
-    if (v === 'true') return true;
-    if (v === 'false') return false;
-    return 'all';
-  })
-  .option('--limit <number>', '返回文件数量限制 (默认 10, 0=全部)', parseInt)
-  .action(async (projectPath: string, options) => {
-    const result = await rawStatus(projectPath, {
-      modified: options.modified ?? true,
-      limit: options.limit ?? 10,
-    });
-    console.log(JSON.stringify(result, null, 2));
+  .command('pending-files <project-path>')
+  .description('检测待处理的 raw 文件（基于 git commit hash）')
+  .action(async (projectPath: string) => {
+    try {
+      const result = await pendingFiles(projectPath);
+      console.log(JSON.stringify(result, null, 2));
+    } catch (err: any) {
+      console.error(`错误: ${err.message}`);
+      process.exit(1);
+    }
   });
 
 program
@@ -112,21 +108,13 @@ program
 
 program
   .command('mark-processed <project-path>')
-  .description('标记文件已处理')
-  .option('--files <json>', '文件路径数组 JSON', (v) => safeJsonParse<string[]>(v, '--files'))
-  .argument('[file-path]', '单个文件路径（与 --files 二选一）')
-  .action(async (projectPath: string, filePath: string | undefined, options) => {
-    if (options.files) {
-      // 批量标记（原子写入，避免并发冲突）
-      const files = options.files as string[];
-      await markProcessedBatch(projectPath, files);
-      console.log(`Marked ${files.length} files as processed`);
-    } else if (filePath) {
-      // 单个标记
-      await markProcessed(projectPath, filePath);
-      console.log(`Marked ${filePath} as processed`);
-    } else {
-      console.error('错误：请提供文件路径或使用 --files 参数');
+  .description('标记当前 HEAD 为已处理状态')
+  .action(async (projectPath: string) => {
+    try {
+      await markProcessed(projectPath);
+      console.log('✅ 已标记为已处理');
+    } catch (err: any) {
+      console.error(`错误: ${err.message}`);
       process.exit(1);
     }
   });
