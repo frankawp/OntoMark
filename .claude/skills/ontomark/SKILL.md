@@ -53,10 +53,8 @@ ontomark ontology-status <project-path>
 # 返回: { exists, path, entityTypes: { Person: {...}, Organization: {...}, ... } }
 
 # 获取待处理文件
-ontomark raw-status <project-path> [--modified <true|false|all>] [--limit <number>]
-# --modified: true=待处理(默认), false=已处理, all=全部
-# --limit: 返回文件数限制(默认10, 0=全部)
-# 返回: { files: [{path, hash, modified}], total, pending, ontologyChanged }
+ontomark pending-files <project-path>
+# 返回: { files: string[], total: number, ontologyChanged: boolean, lastHash: string }
 
 # 获取 wiki 文件状态
 ontomark wiki-status <project-path>
@@ -64,9 +62,9 @@ ontomark wiki-status <project-path>
 ```
 
 **增量处理机制**：
-- `ontologyChanged: true` 表示 ontology.yaml 已变化，所有文件需重新处理
-- `pending` 表示需要处理的文件数量
-- 文件内容变化时 `modified: true`
+- `ontologyChanged: true` 表示 ontology.yaml 在此批次中有变更
+- `total` 表示需要处理的文件数量
+- 变更检测基于 git commit hash，只检出当前用户提交的变更
 
 ### Wiki 写入
 
@@ -125,11 +123,8 @@ interface WikiWriteItemResult {
 ### 标记处理
 
 ```bash
-# 单个标记
-ontomark mark-processed <project-path> <file-path>
-
-# 批量标记
-ontomark mark-processed <project-path> --files '["raw/a.md","raw/b.md"]'
+# 标记当前 HEAD 为已处理状态
+ontomark mark-processed <project-path>
 ```
 
 ### 索引操作
