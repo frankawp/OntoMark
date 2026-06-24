@@ -16,11 +16,13 @@ function gitCommand(args: string[], projectPath: string): { stdout: string; stde
   return { stdout: result.stdout.trim(), stderr: result.stderr.trim(), status: result.status };
 }
 
+const ONTOLOGY_FILE = 'ontology.md';
+
 export async function pendingFiles(projectPath: string): Promise<PendingFilesResult> {
   // 读取配置
   const config = await readConfig(projectPath);
   const inputDirs = config.inputDirs;
-  const ontologyFile = config.ontologyFile;
+  const ontologyFile = ONTOLOGY_FILE;
 
   // 1. 读取处理状态
   const processedPath = path.join(projectPath, '.ontomark', 'processed.json');

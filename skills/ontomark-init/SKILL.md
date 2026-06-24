@@ -25,8 +25,7 @@ OntoMark 支持灵活配置输入和输出目录。配置存储在 `.ontomark/co
 {
   "version": "1.0",
   "inputDirs": ["raw", "codebase"],
-  "outputDir": "wiki",
-  "ontologyFile": "ontology.yaml"
+  "outputDir": "wiki"
 }
 ```
 
@@ -34,7 +33,8 @@ OntoMark 支持灵活配置输入和输出目录。配置存储在 `.ontomark/co
 |------|------|--------|
 | `inputDirs` | 输入源目录列表（可多个），Ingest 从这些目录读取文档 | `["raw"]` |
 | `outputDir` | 输出目录（仅一个），Ingest 生成的实体页面写入此目录 | `"wiki"` |
-| `ontologyFile` | 本体定义文件路径（项目相对路径） | `"ontology.yaml"` |
+
+> `ontology.md` 固定存放在项目根目录，无需在配置中声明。
 
 ### 输入目录（inputDirs）
 
@@ -93,7 +93,7 @@ project/
    输出目录：
      📂 wiki/         → 128 个实体页面
 
-   本体文件：ontology.yaml（8 种实体类型）
+   知识维度：4 个（Actor, Event, Thing, Place）
    ```
 
 ### 第二步：询问用户意图
@@ -146,15 +146,58 @@ project/
    确认：将使用输出目录 📂 output/wiki/
    ```
 
-### 第五步：本体设计引导
+### 第五步：本体设计引导（AI 扫描建议 → 用户交互修改）
 
-7. 如果 `ontology.yaml` 不存在或用户同意重新设计：
+7. 如果 `ontology.md` 不存在或用户同意重新设计：
 
-   - 扫描输入目录内容（如果已有文件），了解文档类型
-   - 询问用户知识库的适用场景（见下方场景模板）
-   - 根据场景推荐实体类型和关系
-   - 展示推荐的 `ontology.yaml` 内容
-   - 用户确认后写入
+   **① 扫描输入目录（了解内容）**
+   - 扫描输入目录下的现有文档，分析：
+     - 文档主题领域（新闻？技术？学术？）
+     - 反复出现的概念类型（人物？事件？产品？）
+     - 文档中呈现的知识密度
+   - 读取 `reference/ontology.md` 的框架维度模板
+
+   **② AI 建议骨架**
+   - 根据扫描结果，推荐适合的维度组合：
+     ```
+     根据文档内容，建议以下知识维度：
+
+     📋 Actor / 行动者（粒度：标准）
+        → 文档中出现大量人物和组织
+        → 属性：角色/职位、所属组织
+
+     📋 Event / 事件（粒度：详细）
+        → 文档按时间线组织，事件密集
+        → 属性：时间、地点、参与方、结果
+
+     📋 Thing / 事物（粒度：标准）
+        → 涉及多个产品和技术概念
+        → 属性：类型、用途、开发者
+
+     📋 Place / 地点（粒度：粗略）
+        → 部分文档涉及地理位置
+        → 属性：类型
+     ```
+
+   **③ 用户交互修改**
+   ```
+   你的知识库将使用以上知识维度。
+   你可以：
+   A. 接受全部建议
+   B. 修改后接受（增删维度、调粒度、改属性）
+   C. 从模板重新选择
+   D. 自由定义（自定义所有维度）
+
+   ❓ 选择：B
+
+   请指定要修改的内容：
+   - 删除哪个维度？→ Place（不需要地点）
+   - 调整粒度？→ Thing 改为"粗略"
+   - 修改属性？→ Actor 增加"联系方式"
+   ```
+
+   **④ 写入 ontology.md**
+   - 用户确认最终版本后写入项目根目录
 
 ### 第六步：创建目录和写入配置
 
@@ -179,10 +222,11 @@ project/
    {
      "version": "1.0",
      "inputDirs": ["raw/docs", "codebase", "pdf/notes"],
-     "outputDir": "output/wiki",
-     "ontologyFile": "ontology.yaml"
+     "outputDir": "output/wiki"
    }
    ```
+
+   > `ontology.md` 始终放在项目根目录，由 init 工作流直接写入，无需在 config 中声明。
 
 ### 第七步：下一步指引
 
@@ -199,7 +243,7 @@ project/
       • codebase/
       • pdf/notes/
    📤 输出目录：output/wiki/
-   📋 本体文件：ontology.yaml
+   📋 知识维度：4 个（Actor, Event, Thing, Place）
 
    目录状态：
    📂 raw/docs/       → 已就绪
@@ -232,7 +276,7 @@ project/
 输出目录：
   📂 wiki/         → 128 个实体页面
 
-本体文件：ontology.yaml（8 种实体类型）
+知识维度：4 个（Actor, Event, Thing, Place）
 上次索引更新：2026-06-24 15:30:00
 ```
 
@@ -242,7 +286,7 @@ project/
 请选择要调整的内容（可多选）：
 A. 调整输入目录
 B. 调整输出目录
-C. 重新设计本体（ontology.yaml）
+C. 重新设计本体（ontology.md）
 D. 全部重新初始化（⚠️ 清除现有数据）
 E. 完成，无需修改
 
@@ -291,73 +335,9 @@ E. 完成，无需修改
 📂 output/wiki/ → 已创建
 ```
 
-## 本体设计建议
+## 本体设计参考
 
-### 新闻/事件追踪
-
-```yaml
-entity_types:
-  Person:
-    description: 人物（记者、官员、专家、当事人等）
-    template:
-      info:
-        - key: role
-          label: 角色/职位
-        - key: organization
-          label: 所属组织
-  Organization:
-    description: 组织（公司、政府、NGO、媒体等）
-  Event:
-    description: 事件
-    template:
-      info:
-        - key: date
-          label: 日期
-        - key: location
-          label: 地点
-  Location:
-    description: 地点
-```
-
-### 人物/组织档案
-
-```yaml
-entity_types:
-  Person:
-    description: 人物
-    template:
-      info:
-        - key: role
-          label: 职位
-        - key: nationality
-          label: 国籍
-  Organization:
-    description: 组织
-    template:
-      info:
-        - key: type
-          label: 类型
-        - key: founded
-          label: 成立时间
-```
-
-### 产品/技术文档
-
-```yaml
-entity_types:
-  Product:
-    description: 产品
-    template:
-      info:
-        - key: type
-          label: 产品类型
-        - key: developer
-          label: 开发者
-  Technology:
-    description: 技术
-  Organization:
-    description: 组织
-```
+完整的框架维度模板参考 [reference/ontology.md](reference/ontology.md)，包含维度定义、粒度说明和关联关系。AI 在 init 阶段会根据扫描结果从中推荐骨架，用户交互确认后生成专属的 ontology.md。
 
 ## 注意事项
 
@@ -378,7 +358,7 @@ entity_types:
    • codebase/
    • pdf/notes/
 📤 输出目录：output/wiki/
-📋 本体设计：新闻/事件追踪（4 种实体类型）
+📋 知识维度：4 个（Actor, Event, Thing, Place）
 
 下一步：
 1. 将文档放入输入目录

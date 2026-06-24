@@ -1,8 +1,5 @@
 /**
  * 配置读取工具 — 从 .ontomark/config.json 读取项目配置
- *
- * 所有 CLI 工具通过此模块获取输入/输出目录配置，
- * 而不是硬编码 raw/ 和 wiki/。
  */
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -13,15 +10,12 @@ export interface OntoMarkConfig {
   inputDirs: string[];
   /** 输出目录（仅一个），Ingest 生成的实体页面写入此目录 */
   outputDir: string;
-  /** 本体定义文件路径（项目相对路径） */
-  ontologyFile: string;
 }
 
 const DEFAULT_CONFIG: OntoMarkConfig = {
   version: '1.0',
   inputDirs: ['raw'],
   outputDir: 'wiki',
-  ontologyFile: 'ontology.yaml',
 };
 
 /**

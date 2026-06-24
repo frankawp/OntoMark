@@ -29,11 +29,7 @@ ontomark lint-all <project-path>
 
 ### Wiki 写入
 
-```bash
-# 修复用
-ontomark wiki-write <project-path> --file entities.json
-ontomark wiki-write <project-path> --entities '[...]'
-```
+使用 Write 工具直接写入 Markdown 文件修复（格式见 ingest 技能"写入实体页面"章节）。
 
 ### 索引操作
 
@@ -78,7 +74,7 @@ ontomark index-query <project-path> <name> [--fuzzy]
 用户拒绝 → 结束，仅报告
 
 **修复流程：**
-5. 调用 `wiki-write` → 更新相关页面
+5. 使用 Write 工具更新相关页面
 6. 调用 `index-build` → 重建索引
 7. 调用 `lint-all` → 验证修复结果
 

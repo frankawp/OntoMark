@@ -33,11 +33,7 @@ ontomark index-query <project-path> <name> --fuzzy  # 模糊匹配
 
 ### Wiki 写入
 
-```bash
-# 批量写入（推荐）
-ontomark wiki-write <project-path> --file entities.json
-ontomark wiki-write <project-path> --entities '[...]'
-```
+使用 Write 工具直接写入 Markdown 文件（格式见 ingest 技能"写入实体页面"章节）。
 
 ### 状态查询
 
@@ -71,7 +67,7 @@ ontomark ontology-status <project-path>
 6. 向用户展示回答
 7. 询问："这个回答有价值，要存入 wiki 作为 Topic 页面吗？"
 
-   用户同意 → 调用 `wiki-write` → 创建 Topic 页面
+   用户同意 → 使用 Write 工具创建 Topic 页面（参考 ingest 技能的 Markdown 格式）
    用户拒绝 → 结束，不存储
 
 ## 回答形式

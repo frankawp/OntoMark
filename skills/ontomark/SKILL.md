@@ -22,7 +22,6 @@ description: OntoMark 知识库入口技能。当用户提到知识库、wiki、
 | 关键词模式 | 工作流 | 子技能 |
 |-----------|--------|--------|
 | 初始化/init/创建项目/设置 | Init | 调用 Skill: `ontomark-init` |
-| 初始化/init/创建项目/设置 | Init | 调用 Skill: `ontomark-init` |
 | 处理/添加/导入/ingest | Ingest | 调用 Skill: `ontomark-ingest` |
 | 谁/什么/查询/query/列出 | Query | 调用 Skill: `ontomark-query` |
 | 检查/lint/健康/孤立 | Lint | 调用 Skill: `ontomark-lint` |
@@ -39,7 +38,7 @@ description: OntoMark 知识库入口技能。当用户提到知识库、wiki、
 所有子技能共享以下规则：
 
 1. **先读后写** — 调用 `wiki-write` 前必须先读取或查询实体状态
-2. **类型来源** — 所有实体类型从 `ontology-status` 获取，不硬编码
+2. **类型来源** — 所有实体类型从 `ontology.md` 读取，不硬编码
 3. **来源追溯** — 每个实体必须记录 sources
 4. **WikiLinks 由 LLM 标注** — CLI 不处理语义标注
 

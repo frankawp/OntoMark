@@ -26,10 +26,6 @@ ontomark <command> <project-path>
 ### 状态查询
 
 ```bash
-# 获取可用实体类型
-ontomark ontology-status <project-path>
-# 返回: { exists, path, entityTypes: { Person: {...}, Organization: {...}, ... } }
-
 # 获取待处理文件
 ontomark raw-status <project-path> [--modified <true|false|all>] [--limit <number>]
 # --modified: true=待处理(默认), false=已处理, all=全部
@@ -38,52 +34,73 @@ ontomark raw-status <project-path> [--modified <true|false|all>] [--limit <numbe
 ```
 
 **增量处理机制**：
-- `ontologyChanged: true` → ontology.yaml 已变化，所有文件需重新处理
+- `ontologyChanged: true` → ontology.md 已变化，所有文件需重新处理
 - `pending` → 需要处理的文件数量
 - 文件内容变化时 `modified: true`
 
-### Wiki 写入
+### 写入实体页面
 
-```bash
-# 批量写入（推荐）
-ontomark wiki-write <project-path> --file entities.json
-ontomark wiki-write <project-path> --entities '[...]'
+使用 Write 工具直接写入 Markdown 文件到输出目录。每类实体按类型分目录存放。
 
-# 单个写入
-ontomark wiki-write <project-path> \
-  --canonical "实体名称" \
-  --type "Person" \
-  --content "实体描述内容" \
-  --sources '["raw/file.md"]' \
-  --is-update false
+**文件路径格式**：
+```
+{outputDir}/{EntityType}/{CanonicalName}.md
 ```
 
-**实体格式**：
-```typescript
-interface WikiWriteEntity {
-  canonical: string;        // 规范名称（必需）
-  type: string;              // 实体类型（必需，必须存在于 ontology）
-  content: string;           // 实体描述内容（必需）
-  sources: SourceRef[];      // 来源（必需）
-  aliases?: string[];        // 别名
-  info?: Record<string, string>;  // 关键信息
-  needsReview?: boolean;     // 是否需审核
-  isUpdate: boolean;         // true=更新, false=新建
-}
-
-type SourceRef = string | { file: string; lines?: number[] };
+例如 `outputDir` 为 `wiki`、类型为 `Person` 的实体：
+```
+wiki/Persons/John_Doe.md
 ```
 
-**返回结果**：
-```typescript
-interface WikiWriteResult {
-  total: number;      // 总数
-  created: number;    // 新建数
-  updated: number;    // 更新数
-  failed: number;     // 失败数
-  results: WikiWriteItemResult[];
-}
+**Markdown 文件格式**（YAML frontmatter + 正文）：
+
+```markdown
+---
+canonical: 规范名称
+entity_type: Person
+aliases: [别名1, 别名2]
+sources:
+  - file: raw/article.md
+status: canonical
+last_updated: 2026-06-25
+info:
+  role: 工程师
+  organization: 某公司
+---
+
+# 规范名称
+
+实体的描述内容...
+
+## 关键信息
+
+| 字段 | 值 |
+| --- | --- |
+| role | 工程师 |
+
+## 来源
+
+- [[原始文档名]]
 ```
+
+**frontmatter 字段说明**：
+
+| 字段 | 必填 | 说明 |
+|------|------|------|
+| `canonical` | 是 | 实体的规范名称 |
+| `entity_type` | 是 | 知识维度（必须存在于 ontology.md） |
+| `aliases` | 否 | 别名列表 |
+| `sources` | 是 | 来源文件列表 |
+| `status` | 否 | `canonical` 或 `draft` |
+| `last_updated` | 否 | 更新日期 |
+| `info` | 否 | 关键信息键值对 |
+| `needs_review` | 否 | 设为 `true` 表示需人工审核 |
+
+**规则**：
+1. 写入前先 Read 检查文件是否已存在
+2. 已存在的文件 → 合并 aliases、追加 sources 和 content
+3. 新建的文件 → 生成完整 frontmatter + 正文
+4. 所有知识维度必须来自 `ontology.md`
 
 ### 其他命令
 
@@ -102,7 +119,7 @@ ontomark index-query <project-path> <name> [--fuzzy]
 
 ### 第一步：获取上下文
 
-1. 调用 `ontology-status` → 获取可用实体类型（如不存在，提示用户先运行 /ontomark-init）
+1. **读取 `ontology.md`** → 获取可用知识维度（直接 Read 文件；如不存在，提示用户先运行 /ontomark-init）
 2. 调用 `raw-status` → 获取待处理文件列表
 3. 选择一个待处理文件（用户指定或按顺序）
 
@@ -129,13 +146,11 @@ ontomark index-query <project-path> <name> [--fuzzy]
 
 ### 第五步：写入 wiki
 
-7. 调用 `wiki-write` → 批量写入所有实体
-   - 使用 `--file` 或 `--entities` 参数
-   - `isUpdate: false`（新建）或 `true`（更新）
-   - sources 使用字符串格式：`["raw/file.md"]`
-8. 检查返回结果中的 failed 项
-   - 成功：`action = 'created'` 或 `'updated'`
-   - 失败：`error` 包含友好提示
+7. 使用 Write 工具写入实体页面（参考上方"写入实体页面"的格式规范）
+   - 新建：`isUpdate: false`，生成完整 frontmatter
+   - 更新：`isUpdate: true`，合并 aliases、追加 sources 和 content
+   - sources 使用格式：`[{"file": "raw/file.md"}]`
+8. 确认写入成功（Read 验证文件内容）
 9. 调用 `mark-processed` → 标记文件已处理
 10. 调用 `index-build` → 重建索引
 
