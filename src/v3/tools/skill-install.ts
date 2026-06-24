@@ -1,21 +1,22 @@
 /**
- * Skill 安装/卸载工具
+ * Skill + Plugin 安装/卸载工具
  */
 import * as fs from 'fs/promises';
 import * as fsSync from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 
-// npm 全局安装时的 Skill 源路径
+// Skill 路径
 const SKILL_SOURCE_DIR = '.claude/skills/ontomark';
-// 用户 Skill 目标路径
 const SKILL_TARGET_DIR = path.join(os.homedir(), '.claude', 'skills', 'ontomark');
+// Plugin 路径
+const PLUGIN_SOURCE_DIR = '.claude/plugins/ontomark';
+const PLUGIN_TARGET_DIR = path.join(os.homedir(), '.claude', 'plugins', 'ontomark');
 
 /**
- * 安装 Skill 到用户目录
+ * 安装 Skill + Plugin 到用户目录
  */
 export async function skillInstall(): Promise<void> {
-  // 查找 npm 包中的 Skill 目录
   const packageDir = findPackageDir();
   if (!packageDir) {
     console.error('错误：无法找到 ontomark npm 包目录');
@@ -23,48 +24,60 @@ export async function skillInstall(): Promise<void> {
     process.exit(1);
   }
 
-  const sourceDir = path.join(packageDir, SKILL_SOURCE_DIR);
-
-  // 检查源目录是否存在
+  // --- 安装 Skill ---
+  const skillSourceDir = path.join(packageDir, SKILL_SOURCE_DIR);
   try {
-    await fs.access(sourceDir);
+    await fs.access(skillSourceDir);
+    // 先删除旧目录，再复制
+    try { await fs.access(SKILL_TARGET_DIR); await fs.rm(SKILL_TARGET_DIR, { recursive: true }); } catch {}
+    await fs.mkdir(path.dirname(SKILL_TARGET_DIR), { recursive: true });
+    await copyDir(skillSourceDir, SKILL_TARGET_DIR);
+    console.log('✅ Skill 已安装到:', SKILL_TARGET_DIR);
   } catch {
-    console.error('错误：Skill 文件不存在于', sourceDir);
-    process.exit(1);
+    console.log('⚠️ Skill 源目录不存在，跳过:', skillSourceDir);
   }
 
-  // 创建目标目录
-  await fs.mkdir(path.dirname(SKILL_TARGET_DIR), { recursive: true });
-
-  // 如果目标已存在，先删除
+  // --- 安装 Plugin ---
+  const pluginSourceDir = path.join(packageDir, PLUGIN_SOURCE_DIR);
   try {
-    await fs.access(SKILL_TARGET_DIR);
-    await fs.rm(SKILL_TARGET_DIR, { recursive: true });
+    await fs.access(pluginSourceDir);
+    try { await fs.access(PLUGIN_TARGET_DIR); await fs.rm(PLUGIN_TARGET_DIR, { recursive: true }); } catch {}
+    await fs.mkdir(path.dirname(PLUGIN_TARGET_DIR), { recursive: true });
+    await copyDir(pluginSourceDir, PLUGIN_TARGET_DIR);
+    console.log('✅ Plugin 已安装到:', PLUGIN_TARGET_DIR);
   } catch {
-    // 目录不存在，继续
+    console.log('⚠️ Plugin 源目录不存在，跳过:', pluginSourceDir);
   }
 
-  // 复制 Skill 文件
-  await copyDir(sourceDir, SKILL_TARGET_DIR);
-
-  console.log('✅ Skill 已安装到:', SKILL_TARGET_DIR);
   console.log('');
   console.log('下一步：');
   console.log('  1. 重启 Claude Code');
   console.log('  2. 或在 Claude Code 中运行: /reload-plugins');
-  console.log('  3. 然后运行: /ontomark');
+  console.log('  3. 然后运行: /ontomark 或 /ontomark-ingest');
 }
 
 /**
- * 卸载用户目录中的 Skill
+ * 卸载用户目录中的 Skill + Plugin
  */
 export async function skillUninstall(): Promise<void> {
+  let anyUninstalled = false;
+
   try {
     await fs.access(SKILL_TARGET_DIR);
     await fs.rm(SKILL_TARGET_DIR, { recursive: true });
     console.log('✅ Skill 已卸载:', SKILL_TARGET_DIR);
-  } catch {
-    console.log('Skill 未安装或已卸载');
+    anyUninstalled = true;
+  } catch {}
+
+  try {
+    await fs.access(PLUGIN_TARGET_DIR);
+    await fs.rm(PLUGIN_TARGET_DIR, { recursive: true });
+    console.log('✅ Plugin 已卸载:', PLUGIN_TARGET_DIR);
+    anyUninstalled = true;
+  } catch {}
+
+  if (!anyUninstalled) {
+    console.log('OntoMark 未安装或已卸载');
   }
 }
 
@@ -73,19 +86,14 @@ export async function skillUninstall(): Promise<void> {
  */
 function findPackageDir(): string | null {
   // 方法1: 本地开发环境（当前项目目录）
-  // 检查是否存在 .claude/skills/ontomark 目录
   const localSkillDir = path.resolve(__dirname, '../../../.claude/skills/ontomark');
   try {
     fsSync.accessSync(localSkillDir);
-    // 返回项目根目录
     return path.resolve(__dirname, '../../..');
-  } catch {
-    // 继续
-  }
+  } catch {}
 
   // 方法2: 从当前模块路径查找（npm 全局安装）
   try {
-    // __dirname 是 dist/v3/tools，向上找到包根目录
     let dir = __dirname;
     while (dir !== '/') {
       const pkgPath = path.join(dir, 'package.json');
@@ -97,9 +105,7 @@ function findPackageDir(): string | null {
       }
       dir = path.dirname(dir);
     }
-  } catch {
-    // 继续
-  }
+  } catch {}
 
   // 方法3: 从全局 node_modules 查找
   const globalNodeModules = path.join(process.execPath, '../lib/node_modules');
@@ -107,9 +113,7 @@ function findPackageDir(): string | null {
   try {
     fsSync.accessSync(globalPackageDir);
     return globalPackageDir;
-  } catch {
-    // 继续
-  }
+  } catch {}
 
   return null;
 }
@@ -120,11 +124,9 @@ function findPackageDir(): string | null {
 async function copyDir(src: string, dest: string): Promise<void> {
   await fs.mkdir(dest, { recursive: true });
   const entries = await fs.readdir(src, { withFileTypes: true });
-
   for (const entry of entries) {
     const srcPath = path.join(src, entry.name);
     const destPath = path.join(dest, entry.name);
-
     if (entry.isDirectory()) {
       await copyDir(srcPath, destPath);
     } else {

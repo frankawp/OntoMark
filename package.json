@@ -10,7 +10,8 @@
   "files": [
     "dist/v3/**/*.js",
     "dist/v3/**/*.d.ts",
-    ".claude/skills/**/*"
+    ".claude/skills/**/*",
+    ".claude/plugins/**/*"
   ],
   "scripts": {
     "build": "npx tsc",
