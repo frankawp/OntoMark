@@ -1,75 +1,53 @@
 /**
- * 标记文件已处理
- * 更新 .ontomark/processed.json
+ * 标记文件已处理 — 记录当前 HEAD hash
+ * 不再计算 MD5，依赖 git commit hash 判断变更
  */
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import * as crypto from 'crypto';
+import { spawnSync } from 'child_process';
 import { ProcessedData } from './types';
-import { getOntologyPath } from './ontology-path';
 
 /**
- * 标记单个文件已处理
+ * 标记当前 HEAD 为已处理状态
  */
-export async function markProcessed(
-  projectPath: string,
-  filePath: string
-): Promise<void> {
-  await markProcessedBatch(projectPath, [filePath]);
-}
-
-/**
- * 批量标记文件已处理（原子操作，避免并发冲突）
- */
-export async function markProcessedBatch(
-  projectPath: string,
-  filePaths: string[]
-): Promise<void> {
-  if (filePaths.length === 0) return;
-
+export async function markProcessed(projectPath: string): Promise<void> {
   const ontomarkDir = path.join(projectPath, '.ontomark');
   const processedPath = path.join(ontomarkDir, 'processed.json');
 
   // 确保目录存在
   await fs.mkdir(ontomarkDir, { recursive: true });
 
+  // 获取当前 HEAD hash
+  const result = spawnSync('git', ['rev-parse', 'HEAD'], {
+    cwd: projectPath,
+    encoding: 'utf-8',
+    stdio: 'pipe',
+  });
+  if (result.status !== 0) {
+    throw new Error('无法获取 git HEAD hash。请确保项目在 git 仓库中。');
+  }
+  const headHash = result.stdout.trim();
+
   // 读取现有数据
-  let data: ProcessedData = { files: {} };
+  let data: ProcessedData = {};
   try {
     const content = await fs.readFile(processedPath, 'utf-8');
     data = JSON.parse(content);
   } catch {
-    // 文件不存在，使用默认空数据
+    // 文件不存在
   }
 
-  // 计算 ontology.yaml 哈希
-  const ontologyResult = await getOntologyPath(projectPath);
-  if (ontologyResult.exists) {
-    const ontologyContent = await fs.readFile(ontologyResult.path, 'utf-8');
-    data.ontologyHash = crypto.createHash('md5').update(ontologyContent).digest('hex');
-  }
+  // 更新记录
+  data.lastProcessedHash = headHash;
+  data.lastProcessedAt = new Date().toISOString();
 
-  // 更新所有文件（并行计算哈希）
-  const newEntries = await Promise.all(
-    filePaths.map(async (filePath) => {
-      const absolutePath = path.join(projectPath, filePath);
-      const fileContent = await fs.readFile(absolutePath, 'utf-8');
-      const hash = crypto.createHash('md5').update(fileContent).digest('hex');
-      return {
-        filePath,
-        lastProcessed: new Date().toISOString(),
-        hash,
-      };
-    })
-  );
-
-  for (const entry of newEntries) {
-    data.files[entry.filePath] = {
-      lastProcessed: entry.lastProcessed,
-      hash: entry.hash,
-    };
-  }
-
-  // 一次性写入
+  // 写入
   await fs.writeFile(processedPath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+/**
+ * 兼容旧接口（不再需要文件参数）
+ */
+export async function markProcessedBatch(projectPath: string, _filePaths?: string[]): Promise<void> {
+  return markProcessed(projectPath);
 }
