@@ -1,3 +1,8 @@
+---
+name: ontomark-ingest
+description: 从 raw 文档提取实体，写入 wiki。触发词：处理/添加/导入/ingest
+---
+
 # Ingest 工作流
 
 > 从 raw 文档提取实体，写入 wiki。
@@ -5,7 +10,8 @@
 ## 触发条件
 
 - 用户输入：`/ontomark` + 含有"处理/添加/导入"等关键词
-- 或显式调用：`/ontomark ingest [文件路径]`
+- 或显式调用：`/ontomark-ingest`
+- 或 `/ontomark ingest [文件路径]`
 
 ## 工作流程
 

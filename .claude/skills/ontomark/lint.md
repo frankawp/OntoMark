@@ -1,3 +1,8 @@
+---
+name: ontomark-lint
+description: 检查 wiki 健康状态，发现问题并建议修复。触发词：检查/lint/健康/孤立
+---
+
 # Lint 工作流
 
 > 检查 wiki 健康状态，发现问题并建议修复。
@@ -5,7 +10,8 @@
 ## 触发条件
 
 - 用户输入：`/ontomark` + 含有"检查/lint/健康/孤立"等关键词
-- 或显式调用：`/ontomark lint`
+- 或显式调用：`/ontomark-lint`
+- 或 `/ontomark lint`
 
 ## 工作流程
 

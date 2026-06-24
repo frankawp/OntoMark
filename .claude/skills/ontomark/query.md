@@ -1,3 +1,8 @@
+---
+name: ontomark-query
+description: 查询 wiki 知识，生成回答。触发词：谁/什么/查询/列出/query
+---
+
 # Query 工作流
 
 > 查询 wiki 知识，生成回答，用户确认后可选存储。
@@ -5,7 +10,8 @@
 ## 触发条件
 
 - 用户输入：`/ontomark` + 含有"谁/什么/查询/列出"等关键词
-- 或显式调用：`/ontomark query [问题]`
+- 或显式调用：`/ontomark-query`
+- 或 `/ontomark query [问题]`
 
 ## 工作流程
 
