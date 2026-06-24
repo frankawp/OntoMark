@@ -4,19 +4,14 @@
 
 // ============ 处理状态 ============
 
-export interface ProcessedFile {
-  path: string;
-  lastProcessed?: string;
-  hash: string;
-  modified: boolean;
-}
-
-export interface RawStatusResult {
-  files: ProcessedFile[];
+export interface PendingFilesResult {
+  /** 需要处理的 raw 文件列表（相对路径） */
+  files: string[];
   total: number;
-  pending: number;
-  ontologyChanged?: boolean;
-  ontologyHash?: string;
+  /** ontology.yaml 是否在此批次中有变更 */
+  ontologyChanged: boolean;
+  /** 当前记录的 lastProcessedHash */
+  lastHash: string;
 }
 
 // ============ Wiki 状态 ============
@@ -140,9 +135,8 @@ export interface LintAllResult {
 // ============ 处理状态存储 ============
 
 export interface ProcessedData {
-  ontologyHash?: string;  // ontology.yaml 的 hash
-  files: Record<string, {
-    lastProcessed: string;
-    hash: string;
-  }>;
+  /** 上次处理的 git commit hash */
+  lastProcessedHash?: string;
+  /** 上次处理时间 */
+  lastProcessedAt?: string;
 }
