@@ -2,12 +2,10 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { spawnSync } from 'child_process';
 import { PendingFilesResult, ProcessedData } from './types';
-
-const RAW_DIR = 'raw';
-const ONTOLOGY_FILE = 'ontology.yaml';
+import { readConfig } from './read-config';
 
 /**
- * 使用 git commit hash 检测 raw 目录中新增或变更的文件
+ * 使用 git commit hash 检测输入目录中新增或变更的文件
  *
  * @param projectPath 项目路径
  * @returns 待处理文件清单
@@ -19,6 +17,11 @@ function gitCommand(args: string[], projectPath: string): { stdout: string; stde
 }
 
 export async function pendingFiles(projectPath: string): Promise<PendingFilesResult> {
+  // 读取配置
+  const config = await readConfig(projectPath);
+  const inputDirs = config.inputDirs;
+  const ontologyFile = config.ontologyFile;
+
   // 1. 读取处理状态
   const processedPath = path.join(projectPath, '.ontomark', 'processed.json');
   let processedData: ProcessedData = {};
@@ -39,13 +42,16 @@ export async function pendingFiles(projectPath: string): Promise<PendingFilesRes
 
   // 3. 首次运行：没有 lastProcessedHash
   if (!lastHash) {
-    // 扫描 raw 目录，递归查找所有 .md 文件
+    // 扫描所有输入目录，递归查找所有 .md 文件
     const files: string[] = [];
-    const rawDir = path.join(projectPath, RAW_DIR);
-    await scanMdFiles(rawDir, 'raw', files);
+    for (const inputDir of inputDirs) {
+      const fullDir = path.join(projectPath, inputDir);
+      const prefix = inputDir.replace(/\/$/, ''); // 去尾斜杠
+      await scanMdFiles(fullDir, prefix, files);
+    }
 
-    // 检查 ontology.yaml 是否存在
-    const ontologyChanged = await ontologyYamlExists(projectPath);
+    // 检查 ontologyFile 是否存在
+    const ontologyChanged = await ontologyFileExists(projectPath, ontologyFile);
 
     // 获取 HEAD hash
     const { stdout: headHash } = gitCommand(['rev-parse', 'HEAD'], projectPath);
@@ -76,9 +82,16 @@ export async function pendingFiles(projectPath: string): Promise<PendingFilesRes
     throw new Error('无法获取 git user.email。请先配置 git: git config user.email "your@email.com"');
   }
 
+  // 构建 git log 路径过滤条件：所有输入目录下的 .md 文件 + ontology 文件
+  const pathspecs: string[] = [];
+  for (const inputDir of inputDirs) {
+    pathspecs.push(`${inputDir.replace(/\/$/, '')}/*.md`);
+  }
+  pathspecs.push(ontologyFile);
+
   // 执行 git log 获取变更文件
   const { stdout: changedOutput, status: logStatus } = gitCommand(
-    ['log', `${lastHash}..HEAD`, `--author=${userEmail}`, '--name-only', '--pretty=format:', '--diff-filter=ACMR', '--', 'raw/*.md', 'ontology.yaml'],
+    ['log', `${lastHash}..HEAD`, `--author=${userEmail}`, '--name-only', '--pretty=format:', '--diff-filter=ACMR', '--', ...pathspecs],
     projectPath
   );
   if (logStatus !== 0) {
@@ -100,10 +113,14 @@ export async function pendingFiles(projectPath: string): Promise<PendingFilesRes
     const trimmed = file.trim();
     if (!trimmed) continue;
 
-    if (trimmed === ONTOLOGY_FILE) {
+    if (trimmed === ontologyFile) {
       ontologyChanged = true;
-    } else if (trimmed.startsWith('raw/') && trimmed.endsWith('.md')) {
-      rawFiles.push(trimmed);
+    } else if (trimmed.endsWith('.md')) {
+      // 检查文件是否在输入目录中
+      const inInputDir = inputDirs.some(dir => trimmed.startsWith(dir.replace(/\/$/, '') + '/'));
+      if (inInputDir) {
+        rawFiles.push(trimmed);
+      }
     }
   }
 
@@ -140,11 +157,11 @@ async function scanMdFiles(dir: string, relativePrefix: string, result: string[]
 }
 
 /**
- * 检查 ontology.yaml 是否存在于项目根目录
+ * 检查 ontology 文件是否存在于项目根目录
  */
-async function ontologyYamlExists(projectPath: string): Promise<boolean> {
+async function ontologyFileExists(projectPath: string, ontologyFile: string): Promise<boolean> {
   try {
-    await fs.access(path.join(projectPath, ONTOLOGY_FILE));
+    await fs.access(path.join(projectPath, ontologyFile));
     return true;
   } catch {
     return false;

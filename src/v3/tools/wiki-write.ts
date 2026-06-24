@@ -3,6 +3,7 @@ import * as path from 'path';
 import matter from 'gray-matter';
 import { WikiWriteInput, WikiWriteResult, WikiWriteItemResult, WikiWriteEntity, SourceRef } from './types';
 import { ontologyStatus } from './ontology-status';
+import { readConfig } from './read-config';
 import { normalizeEntityName, normalizeWikiLinksInText } from './normalize';
 
 /**
@@ -23,13 +24,17 @@ export async function wikiWrite(input: WikiWriteInput): Promise<WikiWriteResult>
     throw new Error('未找到 ontology.yaml，请先运行 ontomark init 创建项目结构');
   }
 
+  // 读取配置获取输出目录
+  const config = await readConfig(projectPath);
+  const outputDir = config.outputDir;
+
   const results: WikiWriteItemResult[] = [];
   let created = 0;
   let updated = 0;
   let failed = 0;
 
   for (const entity of entities) {
-    const result = await writeSingleEntity(projectPath, entity, ontology.entityTypes);
+    const result = await writeSingleEntity(projectPath, outputDir, entity, ontology.entityTypes);
     results.push(result);
 
     if (!result.success) {
@@ -55,6 +60,7 @@ export async function wikiWrite(input: WikiWriteInput): Promise<WikiWriteResult>
  */
 async function writeSingleEntity(
   projectPath: string,
+  outputDir: string,
   entity: WikiWriteEntity,
   entityTypes: Record<string, any>
 ): Promise<WikiWriteItemResult> {
@@ -80,7 +86,7 @@ async function writeSingleEntity(
     .replace(/\s+/g, '_')
     // 保留 字母数字、下划线、连字符、CJK、拉丁扩展字符
     .replace(/[^\w\-一-鿿À-ɏ]/g, '');
-  const filePath = path.join(projectPath, 'wiki', type, `${sanitizedName}.md`);
+  const filePath = path.join(projectPath, outputDir, type, `${sanitizedName}.md`);
 
   // 检查文件存在状态
   const exists = await fs.access(filePath).then(() => true).catch(() => false);

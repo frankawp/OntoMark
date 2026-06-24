@@ -5,14 +5,17 @@ import { LintAllResult } from './types';
 import { lintOrphans } from './lint-orphans';
 import { lintMissing } from './lint-missing';
 import { normalizeEntityName } from './normalize';
+import { readConfig } from './read-config';
 
 /**
  * 综合检查
  */
 export async function lintAll(projectPath: string): Promise<LintAllResult> {
-  const wikiDir = path.join(projectPath, 'wiki');
-  const orphansResult = await lintOrphans(projectPath);
-  const missingResult = await lintMissing(projectPath);
+  const config = await readConfig(projectPath);
+  const wikiDir = path.join(projectPath, config.outputDir);
+
+  const orphansResult = await lintOrphans(projectPath, wikiDir);
+  const missingResult = await lintMissing(projectPath, wikiDir);
 
   const empty: string[] = [];
   async function scanForEmpty(dir: string): Promise<void> {

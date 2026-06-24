@@ -1,0 +1,33 @@
+{
+  "name": "ontomark-marketplace",
+  "owner": {
+    "name": "frankawp"
+  },
+  "metadata": {
+    "description": "OntoMark - 将文档转化为持久化知识库。基于知识图谱的实体提取、wiki 管理和查询工具。"
+  },
+  "plugins": [
+    {
+      "name": "ontomark",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/frankawp/OntoMark.git",
+        "path": ".",
+        "ref": "main"
+      },
+      "description": "将文档转化为持久化知识库 - 知识图谱构建工具",
+      "version": "1.0.0",
+      "author": {
+        "name": "frankawp"
+      },
+      "keywords": [
+        "knowledge-graph",
+        "wiki",
+        "ontology",
+        "document-processing",
+        "entity-extraction"
+      ],
+      "category": "productivity"
+    }
+  ]
+}

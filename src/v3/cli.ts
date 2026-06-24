@@ -11,7 +11,6 @@ import { indexBuild } from './tools/index-build';
 import { indexQuery } from './tools/index-query';
 import { lintAll } from './tools/lint-all';
 import { skillInstall, skillUninstall } from './tools/skill-install';
-import { projectInit } from './tools/project-init';
 import { WikiWriteEntity } from './tools/types';
 
 /**
@@ -33,33 +32,6 @@ program
   .name('ontomark')
   .description('OntoMark - Ontology-Driven Knowledge Base Builder')
   .version('3.0.0');
-
-// 项目初始化
-program
-  .command('init [project-path]')
-  .description('初始化项目结构（创建 raw/、wiki/、.ontomark/ 目录）\n            ontology.yaml 由 Ingest 首次执行时自动生成')
-  .action(async (projectPath?: string) => {
-    const targetPath = projectPath || '.';
-    const result = await projectInit(targetPath);
-    if (result.success) {
-      console.log('✅ 项目初始化完成');
-      console.log('创建了以下内容：');
-      for (const item of result.created) {
-        console.log(`   📁 ${item}`);
-      }
-      console.log('');
-      console.log('下一步：');
-      console.log('  1. 将文档放入 raw/ 目录');
-      console.log('  2. 运行 /ontomark ingest 提取实体');
-      console.log('     (Ingest 首次执行时会根据文档内容自动推荐 ontology.yaml)');
-    } else {
-      console.error('❌ 初始化失败：');
-      for (const err of result.errors) {
-        console.error(`   ${err}`);
-      }
-      process.exit(1);
-    }
-  });
 
 // Skill 安装命令
 program

@@ -6,9 +6,18 @@ import { parseWikiLinkTarget } from './normalize';
 
 /**
  * 检查孤立页面（无入链）
+ *
+ * @param projectPath 项目路径
+ * @param wikiDir wiki 目录（由 lint-all 传入，或由 readConfig 自行读取）
  */
-export async function lintOrphans(projectPath: string): Promise<LintOrphansResult> {
-  const wikiDir = path.join(projectPath, 'wiki');
+export async function lintOrphans(projectPath: string, wikiDir?: string): Promise<LintOrphansResult> {
+  // 如果没有传入 wikiDir，从配置读取
+  if (!wikiDir) {
+    const { readConfig } = await import('./read-config');
+    const config = await readConfig(projectPath);
+    wikiDir = path.join(projectPath, config.outputDir);
+  }
+
   const entities = new Set<string>();
   const incomingLinks = new Map<string, Set<string>>();
 

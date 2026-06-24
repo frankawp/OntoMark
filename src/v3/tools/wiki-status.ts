@@ -3,12 +3,14 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import matter from 'gray-matter';
 import { WikiStatusResult, WikiFileInfo } from './types';
+import { readConfig } from './read-config';
 
 /**
  * 查询 wiki 文件状态
  */
 export async function wikiStatus(projectPath: string): Promise<WikiStatusResult> {
-  const wikiDir = path.join(projectPath, 'wiki');
+  const config = await readConfig(projectPath);
+  const wikiDir = path.join(projectPath, config.outputDir);
   const files: WikiFileInfo[] = [];
 
   async function scanDir(dir: string): Promise<void> {

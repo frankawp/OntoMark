@@ -1,3 +1,8 @@
+---
+name: ontomark-lint
+description: 检查 wiki 知识库健康状态。当用户说"检查/lint/健康/孤立"时由 ontomark 主技能分发。
+---
+
 # Lint 工作流
 
 > 检查 wiki 健康状态，发现问题并建议修复。
@@ -5,55 +10,77 @@
 ## 触发条件
 
 - 用户输入：`/ontomark` + 含有"检查/lint/健康/孤立"等关键词
-- 或显式调用：`/ontomark lint`
+- 或显式调用：`/ontomark-lint`
+- 或由 `/ontomark` 主技能分发
+
+## CLI 调用方式
+
+```bash
+ontomark <command> <project-path>
+```
+
+### 健康检查
+
+```bash
+# 完整检查
+ontomark lint-all <project-path>
+# 返回: { orphans, missing, empty, totalIssues, details? }
+```
+
+### Wiki 写入
+
+```bash
+# 修复用
+ontomark wiki-write <project-path> --file entities.json
+ontomark wiki-write <project-path> --entities '[...]'
+```
+
+### 索引操作
+
+```bash
+ontomark index-build <project-path>
+ontomark index-query <project-path> <name> [--fuzzy]
+```
 
 ## 工作流程
 
 ### 第一步：获取问题列表
 
-```
-1. 调用 lint-all → 获取所有问题
-   - orphans: 孤立页面（无入链）
-   - missing: 缺失链接（引用不存在实体）
-   - empty: 空内容页面
-```
+1. 调用 `lint-all` → 获取所有问题
+   - `orphans`：孤立页面（无入链）
+   - `missing`：缺失链接（引用不存在实体）
+   - `empty`：空内容页面
 
 ### 第二步：分析严重程度
 
-```
 2. 按严重程度分类：
 
-🔴 高优先级：
+   🔴 **高优先级**：
    - 缺失链接被多个页面引用（影响范围 > 1）
    - 核心实体页面为空（canonical/status 类实体）
-   
-🟡 中优先级：
+
+   🟡 **中优先级**：
    - 孤立页面（有价值但未被引用）
    - 空页面（内容少于 50 字符）
-   
-🟢 低优先级：
+
+   🟢 **低优先级**：
    - 少量孤立页面（< 3 个）
    - 单一缺失链接
-```
 
 ### 第三步：展示报告
 
-```
 3. 按优先级展示问题列表
 4. 询问："发现 X 个问题，建议修复：[问题摘要]。是否自动修复？"
-```
 
 ### 第四步：执行修复
 
-```
 用户同意 → 执行修复流程
 用户拒绝 → 结束，仅报告
 
-修复流程：
-5. 调用 wiki-write → 更新相关页面
-6. 调用 index-build → 重建索引
-7. 调用 lint-all → 验证修复结果
-```
+**修复流程：**
+5. 调用 `wiki-write` → 更新相关页面
+6. 调用 `index-build` → 重建索引
+7. 调用 `lint-all` → 验证修复结果
 
 ## 自动修复策略
 

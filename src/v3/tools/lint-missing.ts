@@ -10,9 +10,17 @@ import { normalizeEntityName, parseWikiLinkTarget } from './normalize';
  * 两遍扫描：
  * 1. 先收集所有实体的规范名称
  * 2. 再遍历所有文件检查 WikiLinks，引用不在集合中的即为缺失
+ *
+ * @param projectPath 项目路径
+ * @param wikiDir wiki 目录（由 lint-all 传入，或自行读取配置）
  */
-export async function lintMissing(projectPath: string): Promise<LintMissingResult> {
-  const wikiDir = path.join(projectPath, 'wiki');
+export async function lintMissing(projectPath: string, wikiDir?: string): Promise<LintMissingResult> {
+  // 如果没有传入 wikiDir，从配置读取
+  if (!wikiDir) {
+    const { readConfig } = await import('./read-config');
+    const config = await readConfig(projectPath);
+    wikiDir = path.join(projectPath, config.outputDir);
+  }
 
   // 第一遍：收集所有实体名称
   const entities = await collectEntityNames(wikiDir);

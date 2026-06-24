@@ -11,14 +11,10 @@
             "id": "8ac781c1e481e880",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "wiki/Persons/Dr_Jaswant_Gandhi.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "Dr_Jaswant_Gandhi"
+              "title": "新标签页"
             }
           }
         ]
@@ -94,7 +90,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "wiki/Persons/Dr_Jaswant_Gandhi.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +99,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Dr_Jaswant_Gandhi 的反向链接列表"
+              "title": "反向链接"
             }
           },
           {
@@ -113,12 +108,11 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "wiki/Persons/Dr_Jaswant_Gandhi.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Dr_Jaswant_Gandhi 的出链列表"
+              "title": "出链"
             }
           },
           {
@@ -156,13 +150,12 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "wiki/Persons/Dr_Jaswant_Gandhi.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Dr_Jaswant_Gandhi 的大纲"
+              "title": "大纲"
             }
           }
         ]
@@ -185,6 +178,9 @@
   },
   "active": "8ac781c1e481e880",
   "lastOpenFiles": [
+    "CLAUDE.md",
+    "AGENTS.md",
+    "wiki/Persons/Dr_Jaswant_Gandhi.md",
     "wiki/Persons/Benjamin_Netanyahu.md",
     "wiki/Organizations/Mossad.md",
     "wiki/Organizations/Hamas.md",
@@ -193,7 +189,6 @@
     "raw/business/test_incremental_article_1.md",
     "wiki/log.md",
     "wiki/Persons/Mjoachim.md",
-    "wiki/Persons/Dr_Jaswant_Gandhi.md",
     "Rania Khalek.md",
     "wiki/Persons/Rania_Khalek.md",
     "wiki/Persons/OSINTtechnical.md",
@@ -212,9 +207,7 @@
     "wiki/index.md",
     "wiki/Systems/Mossad.md",
     "wiki/Organizations/IDF.md",
-    "wiki/Locations/Sderot.md",
     "wiki/Systems",
-    "raw/entertainment/Subtle_as_a_sledgehammer,_a_pop_icon_returns.md",
     "wiki/Topics",
     "ontology.yaml",
     "wiki",

@@ -1,6 +1,6 @@
 /**
  * 构建实体索引 - 全量重建
- * 扫描 wiki 目录，构建 .ontomark/index.json
+ * 扫描输出目录，构建 .ontomark/index.json
  */
 
 import * as fs from 'fs/promises';
@@ -8,6 +8,7 @@ import * as path from 'path';
 import matter from 'gray-matter';
 import { IndexData, IndexEntity } from './types';
 import { normalizeEntityName } from './normalize';
+import { readConfig } from './read-config';
 
 /**
  * 构建实体索引 - 全量重建
@@ -15,7 +16,8 @@ import { normalizeEntityName } from './normalize';
  * @returns 构建的索引数据
  */
 export async function indexBuild(projectPath: string): Promise<IndexData> {
-  const wikiDir = path.join(projectPath, 'wiki');
+  const config = await readConfig(projectPath);
+  const wikiDir = path.join(projectPath, config.outputDir);
   const ontomarkDir = path.join(projectPath, '.ontomark');
   const indexPath = path.join(ontomarkDir, 'index.json');
 
