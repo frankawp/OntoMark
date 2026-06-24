@@ -1,7 +1,10 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { execSync } from 'child_process';
+import { spawnSync } from 'child_process';
 import { PendingFilesResult, ProcessedData } from './types';
+
+const RAW_DIR = 'raw';
+const ONTOLOGY_FILE = 'ontology.yaml';
 
 /**
  * 使用 git commit hash 检测 raw 目录中新增或变更的文件
@@ -9,6 +12,12 @@ import { PendingFilesResult, ProcessedData } from './types';
  * @param projectPath 项目路径
  * @returns 待处理文件清单
  */
+
+function gitCommand(args: string[], projectPath: string): { stdout: string; stderr: string; status: number | null } {
+  const result = spawnSync('git', args, { cwd: projectPath, encoding: 'utf-8', stdio: 'pipe' });
+  return { stdout: result.stdout.trim(), stderr: result.stderr.trim(), status: result.status };
+}
+
 export async function pendingFiles(projectPath: string): Promise<PendingFilesResult> {
   // 1. 读取处理状态
   const processedPath = path.join(projectPath, '.ontomark', 'processed.json');
@@ -21,14 +30,8 @@ export async function pendingFiles(projectPath: string): Promise<PendingFilesRes
   }
 
   // 2. 验证 git 仓库
-  let gitDir: string;
-  try {
-    gitDir = execSync('git rev-parse --git-dir', {
-      cwd: projectPath,
-      encoding: 'utf-8',
-      timeout: 10000,
-    }).trim();
-  } catch {
+  const { status: gitDirStatus } = gitCommand(['rev-parse', '--git-dir'], projectPath);
+  if (gitDirStatus !== 0) {
     throw new Error('当前目录不在 git 仓库中。OntoMark 依赖 git 检测文件变更。');
   }
 
@@ -38,18 +41,14 @@ export async function pendingFiles(projectPath: string): Promise<PendingFilesRes
   if (!lastHash) {
     // 扫描 raw 目录，递归查找所有 .md 文件
     const files: string[] = [];
-    const rawDir = path.join(projectPath, 'raw');
+    const rawDir = path.join(projectPath, RAW_DIR);
     await scanMdFiles(rawDir, 'raw', files);
 
     // 检查 ontology.yaml 是否存在
     const ontologyChanged = await ontologyYamlExists(projectPath);
 
     // 获取 HEAD hash
-    const headHash = execSync('git rev-parse HEAD', {
-      cwd: projectPath,
-      encoding: 'utf-8',
-      timeout: 10000,
-    }).trim();
+    const { stdout: headHash } = gitCommand(['rev-parse', 'HEAD'], projectPath);
 
     return {
       files,
@@ -61,14 +60,8 @@ export async function pendingFiles(projectPath: string): Promise<PendingFilesRes
 
   // 4. 非首次运行：用 git log 检测变更
   // 验证 hash 在分支历史中
-  try {
-    execSync(`git rev-parse --verify "${lastHash}"`, {
-      cwd: projectPath,
-      encoding: 'utf-8',
-      timeout: 10000,
-      stdio: 'pipe',
-    });
-  } catch {
+  const { status: verifyStatus } = gitCommand(['rev-parse', '--verify', lastHash], projectPath);
+  if (verifyStatus !== 0) {
     throw new Error(
       `错误：lastProcessedHash (${lastHash}) 在当前分支历史中不存在。\n` +
       '可能的原因是 rebase 或 reset 导致提交历史重写。\n' +
@@ -78,33 +71,17 @@ export async function pendingFiles(projectPath: string): Promise<PendingFilesRes
   }
 
   // 获取 user email
-  let userEmail: string;
-  try {
-    userEmail = execSync('git config user.email', {
-      cwd: projectPath,
-      encoding: 'utf-8',
-      timeout: 10000,
-    }).trim();
-  } catch {
-    throw new Error('无法获取 git user.email。请先配置 git: git config user.email "your@email.com"');
-  }
-
-  if (!userEmail) {
+  const { stdout: userEmail, status: emailStatus } = gitCommand(['config', 'user.email'], projectPath);
+  if (emailStatus !== 0 || !userEmail) {
     throw new Error('无法获取 git user.email。请先配置 git: git config user.email "your@email.com"');
   }
 
   // 执行 git log 获取变更文件
-  let changedOutput: string;
-  try {
-    changedOutput = execSync(
-      `git log ${lastHash}..HEAD --author="${userEmail}" --name-only --pretty=format: --diff-filter=ACMR -- 'raw/*.md' 'ontology.yaml'`,
-      {
-        cwd: projectPath,
-        encoding: 'utf-8',
-        timeout: 30000,
-      }
-    ).trim();
-  } catch {
+  const { stdout: changedOutput, status: logStatus } = gitCommand(
+    ['log', `${lastHash}..HEAD`, `--author=${userEmail}`, '--name-only', '--pretty=format:', '--diff-filter=ACMR', '--', 'raw/*.md', 'ontology.yaml'],
+    projectPath
+  );
+  if (logStatus !== 0) {
     throw new Error(
       `错误：无法从 ${lastHash} 获取变更记录。\n` +
       `可能的原因是 HEAD 已回退到 ${lastHash} 之前的版本。\n` +
@@ -123,26 +100,19 @@ export async function pendingFiles(projectPath: string): Promise<PendingFilesRes
     const trimmed = file.trim();
     if (!trimmed) continue;
 
-    if (trimmed === 'ontology.yaml') {
+    if (trimmed === ONTOLOGY_FILE) {
       ontologyChanged = true;
     } else if (trimmed.startsWith('raw/') && trimmed.endsWith('.md')) {
       rawFiles.push(trimmed);
     }
   }
 
-  // 去重（虽然在 Set 阶段已经做了，但确保结果 clean）
-  const uniqueFiles = [...new Set(rawFiles)];
-
   // 获取 HEAD hash
-  const headHash = execSync('git rev-parse HEAD', {
-    cwd: projectPath,
-    encoding: 'utf-8',
-    timeout: 10000,
-  }).trim();
+  const { stdout: headHash } = gitCommand(['rev-parse', 'HEAD'], projectPath);
 
   return {
-    files: uniqueFiles,
-    total: uniqueFiles.length,
+    files: rawFiles,
+    total: rawFiles.length,
     ontologyChanged,
     lastHash: headHash,
   };
@@ -174,7 +144,7 @@ async function scanMdFiles(dir: string, relativePrefix: string, result: string[]
  */
 async function ontologyYamlExists(projectPath: string): Promise<boolean> {
   try {
-    await fs.access(path.join(projectPath, 'ontology.yaml'));
+    await fs.access(path.join(projectPath, ONTOLOGY_FILE));
     return true;
   } catch {
     return false;
