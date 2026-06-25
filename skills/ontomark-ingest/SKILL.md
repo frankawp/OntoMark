@@ -34,7 +34,8 @@ digraph ingest_flow {
     "有冲突?" -> "自动处理" [label="否"];
     "询问用户" -> "Write 实体页面";
     "自动处理" -> "Write 实体页面";
-    "Write 实体页面" -> "log.md 追加";
+    "Write 实体页面" -> "补链\n(补充缺失 WikiLinks)";
+    "补链\n(补充缺失 WikiLinks)" -> "log.md 追加";
     "log.md 追加" -> "mark-processed → index-build";
     "mark-processed → index-build" -> "输出报告" [shape=box];
 }
@@ -135,14 +136,33 @@ digraph ingest_flow {
     - 格式见下方"实体页面格式"
     - **sources 增强**：每个来源记录 `file` 和 `context`（段落位置）
 
-11. **标记已处理**：
+11. **补链** — 在已有 wiki 页面中补充缺失的 WikiLinks：
+
+    收集本次新建实体的名称和别名，在已有页面（排除本次写入的页面）中搜索这些名称是否已出现但未链接：
+
+    ```
+    📎 新实体 [[GPT-4]] 的别名包括 [GPT-4, GPT4]
+
+    在已有页面中发现 2 处未链接的提及：
+      · [[ChatGPT]] — "...基于 GPT-4 大语言模型..." → [[GPT-4]]
+      · [[OpenAI]] — "...2023 年发布了 GPT-4..." → [[GPT-4]]
+
+    是否自动补充这些链接？
+    ```
+
+    - 搜索目标：本次新建实体的 `canonical` + `aliases`
+    - 匹配方式：大小写不敏感
+    - 排除已链接：已存在 `[[名称]]` 的跳过
+    - 用户确认后 → **Write** 更新匹配页面
+
+12. **标记已处理**：
     ```bash
     ontomark mark-processed <project-path>
     ```
 
 ### ⑦ 记录
 
-12. **追加 log.md** — 使用 Write 工具在项目根目录 `log.md` 末尾追加操作记录：
+13. **追加 log.md** — 使用 Write 工具在项目根目录 `log.md` 末尾追加操作记录：
 
     ```markdown
     ## [2026-06-25] ingest | 文档标题
@@ -158,7 +178,7 @@ digraph ingest_flow {
 
     > 如果 `log.md` 不存在则自动创建。
 
-13. **重建索引**：
+14. **重建索引**：
     ```bash
     ontomark index-build <project-path>
     ```
@@ -166,7 +186,7 @@ digraph ingest_flow {
 
 ### ⑧ 报告
 
-14. 向用户展示输出报告。
+15. 向用户展示输出报告。
 
 ---
 
