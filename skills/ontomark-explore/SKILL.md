@@ -93,7 +93,7 @@ description: Use when exploring knowledge points from raw documents through conv
 
 ### 第五阶段：循环探索
 
-15. 写入完成后询问用户：
+16. 写入完成后询问用户：
 
     ```
     ✅ 已写入 [[<实体>]] 到 wiki。
