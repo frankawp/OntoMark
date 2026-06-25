@@ -70,14 +70,26 @@ description: Use when exploring knowledge points from raw documents through conv
 10. **WikiLinks 标注** — 参考 [wikilinks-annotation.md](../ontomark-ingest/reference/wikilinks-annotation.md)
 11. **冲突解决** — 参考 [conflict-resolution.md](../ontomark-ingest/reference/conflict-resolution.md)
 12. **Write** 实体页面到 `{outputDir}/{EntityType}/{CanonicalName}.md`
-13. **标记已处理**：
+13. **追加 log.md** — 使用 Write 工具在 `{projectRoot}/log.md` 末尾追加：
+    ```markdown
+    ## [2026-06-25] explore | 知识点
+
+    type: explore
+    entities:
+      - + EntityName (Type)
+      - ~ ExistingEntity (updated)
+    status: success
+    ---
+    ```
+14. **标记已处理**：
     ```bash
     ontomark mark-processed <project-path>
     ```
-14. **重建索引**：
+15. **重建索引**：
     ```bash
     ontomark index-build <project-path>
     ```
+    `index-build` 会自动更新 `.ontomark/index.json` 和 `wiki/index.md`。
 
 ### 第五阶段：循环探索
 

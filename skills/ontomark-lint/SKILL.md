@@ -77,6 +77,20 @@ ontomark index-query <project-path> <name> [--fuzzy]
 5. 使用 Write 工具更新相关页面
 6. 调用 `index-build` → 重建索引
 7. 调用 `lint-all` → 验证修复结果
+8. **追加 log.md**：
+   ```markdown
+   ## [2026-06-25] lint | 修复摘要
+
+   type: lint
+   entities:
+     - ~ EntityA (updated)
+     - + EntityB (created)
+   fixes:
+     orphans: 2 → 1
+     missing: 3 → 0
+   status: success
+   ---
+   ```
 
 ## 自动修复策略
 

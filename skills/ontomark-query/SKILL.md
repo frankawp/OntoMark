@@ -33,18 +33,19 @@ ontomark index-query <project-path> <name> --fuzzy  # 模糊匹配
 
 ### Wiki 写入
 
-使用 Write 工具直接写入 Markdown 文件（格式见 ingest 技能"写入实体页面"章节）。
+使用 Write 工具直接写入 Markdown 文件（格式见 ingest 技能"实体页面格式"章节）。
 
 ### 状态查询
 
 ```bash
 # 获取 wiki 文件状态
 ontomark wiki-status <project-path>
-# 返回: { files: [{path, canonical, type}], total }
-
-# 获取可用实体类型
-ontomark ontology-status <project-path>
+# 返回: { files: [{path, canonical, type, humanEdited}], total }
 ```
+
+### 获取本体类型
+
+直接 Read 项目根目录的 `ontology.md` 文件，解析知识维度定义。
 
 ## 工作流程
 
@@ -67,7 +68,20 @@ ontomark ontology-status <project-path>
 6. 向用户展示回答
 7. 询问："这个回答有价值，要存入 wiki 作为 Topic 页面吗？"
 
-   用户同意 → 使用 Write 工具创建 Topic 页面（参考 ingest 技能的 Markdown 格式）
+   用户同意 → 使用 Write 工具创建 Topic 页面（参考 ingest 技能的 Markdown 格式），并追加 log.md：
+
+   ```markdown
+   ## [2026-06-25] query | 问题摘要
+
+   type: query
+   entities:
+     - + TopicName (Topic)
+   status: success
+   ---
+   ```
+
+   然后重建索引：`ontomark index-build <project-path>`
+
    用户拒绝 → 结束，不存储
 
 ## 回答形式
