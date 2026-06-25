@@ -25,6 +25,7 @@ description: OntoMark 知识库入口技能。当用户提到知识库、wiki、
 | 处理/添加/导入/ingest | Ingest | 调用 Skill: `ontomark-ingest` |
 | 谁/什么/查询/query/列出 | Query | 调用 Skill: `ontomark-query` |
 | 检查/lint/健康/孤立 | Lint | 调用 Skill: `ontomark-lint` |
+| explore/探索/知识点/搜索/了解 | Explore | 调用 Skill: `ontomark-explore` |
 
 ## 分发规则
 
@@ -37,13 +38,13 @@ description: OntoMark 知识库入口技能。当用户提到知识库、wiki、
 
 所有子技能共享以下规则：
 
-1. **先读后写** — 调用 `wiki-write` 前必须先读取或查询实体状态
+1. **先读后写** — 使用 Write 工具写入实体页面之前，必须先 Read 现有文件或通过 index-query 查询实体状态
 2. **类型来源** — 所有实体类型从 `ontology.md` 读取，不硬编码
 3. **来源追溯** — 每个实体必须记录 sources
 4. **WikiLinks 由 LLM 标注** — CLI 不处理语义标注
 
 ## CLI 工具参考
 
-调用方式：`ontomark <command> <project-path>` 或 `./ontomark <command> <project-path>`
+调用方式：`ontomark <command> <project-path>`
 
-完整 CLI 命令列表见各子技能文档。
+各子技能文档的 CLI 参考表格列出了实际存在的命令及其输出格式。
