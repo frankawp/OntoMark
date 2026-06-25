@@ -19,14 +19,18 @@ digraph ingest_flow {
     "文件为空?" -> "结束" [label="是"];
     "文件为空?" -> "Read 原始文件" [label="否"];
     "Read 原始文件" -> "实体提取\n[entity-extraction.md]" [shape=box];
-    "实体提取\n[entity-extraction.md]" -> "WikiLinks 标注\n[wikilinks-annotation.md]" [shape=box];
+    "实体提取\n[entity-extraction.md]" -> "讨论门\n(展示关键发现)" [shape=diamond];
+    "讨论门\n(展示关键发现)" -> "精炼提取" [label="有反馈"];
+    "精炼提取" -> "WikiLinks 标注\n[wikilinks-annotation.md]";
+    "讨论门\n(展示关键发现)" -> "WikiLinks 标注\n[wikilinks-annotation.md]" [label="✅ 确认"];
     "WikiLinks 标注\n[wikilinks-annotation.md]" -> "冲突检查\n[conflict-resolution.md]" [shape=box];
     "冲突检查\n[conflict-resolution.md]" -> "有冲突?" [shape=diamond];
     "有冲突?" -> "询问用户" [label="是"];
     "有冲突?" -> "自动处理" [label="否"];
     "询问用户" -> "Write 实体页面";
     "自动处理" -> "Write 实体页面";
-    "Write 实体页面" -> "mark-processed → index-build";
+    "Write 实体页面" -> "log.md 追加";
+    "log.md 追加" -> "mark-processed → index-build";
     "mark-processed → index-build" -> "输出报告" [shape=box];
 }
 ```
@@ -60,7 +64,31 @@ digraph ingest_flow {
 
    将步骤 2 读到的 `ontology.md` 实体类型注入提示词。
 
-6. **WikiLinks 标注** — 遵循 [reference/wikilinks-annotation.md](reference/wikilinks-annotation.md)：
+### ④ 讨论
+
+6. 提取完成后，向用户展示关键发现：
+
+   ```
+   📖 文档：{文件名}
+
+   关键发现：
+   ├─ 核心实体：[[名称]]（类型/说明）
+   ├─ 关联实体：[[名称]]（类型/说明）
+   └─ 已有实体更新：[[名称]] 补充信息
+
+   你觉得这个方向对吗？要调整重点还是继续？
+   ```
+
+7. 用户可：
+   - **确认** → 直接进入 WikiLinks 标注
+   - **补充**（如"定价信息也重要"）→ AI 精炼提取后继续
+   - **修正**（如"名称不对"）→ AI 修正后继续
+   - **重定向**（如"我更关注 X"）→ AI 重新搜索相关段落
+   - **跳过** → 不处理此文件，进入下一个
+
+### ⑤ WikiLinks + 冲突解决
+
+8. **WikiLinks 标注** — 遵循 [reference/wikilinks-annotation.md](reference/wikilinks-annotation.md)：
    - 对提取结果做 WikiLinks 标注
    - 对每个实体调用 `index-query` 检查是否存在：
      ```bash
@@ -69,9 +97,7 @@ digraph ingest_flow {
    - `found: true` → 使用现有 canonical 做链接目标
    - `found: false` → 使用提取的 name 做链接目标
 
-### ④ 冲突解决
-
-7. 对每个提取的实体，按 [reference/conflict-resolution.md](reference/conflict-resolution.md) 处理：
+9. **冲突解决** — 对每个提取的实体，按 [reference/conflict-resolution.md](reference/conflict-resolution.md) 处理：
 
    | 条件 | 操作 |
    |------|------|
@@ -81,27 +107,46 @@ digraph ingest_flow {
    | info 冲突 | 询问用户 |
    | 类型不匹配 | 询问用户 |
 
-### ⑤ 写入
+### ⑥ 写入
 
-8. **Write** 实体页面到 `{outputDir}/{EntityType}/{CanonicalName}.md`
-   - 新建：完整 frontmatter + 正文
-   - 更新：Read 现有文件 → 合并 aliases、sources、正文 → 重新写入
-   - 格式见下方"实体页面格式"
-   - **sources 增强**：每个来源记录 `file` 和 `context`（段落位置）
+10. **Write** 实体页面到 `{outputDir}/{EntityType}/{CanonicalName}.md`
+    - 新建：完整 frontmatter + 正文
+    - 更新：Read 现有文件 → 合并 aliases、sources、正文 → 重新写入
+    - 格式见下方"实体页面格式"
+    - **sources 增强**：每个来源记录 `file` 和 `context`（段落位置）
 
-9. **标记已处理**：
-   ```bash
-   ontomark mark-processed <project-path>
-   ```
+11. **标记已处理**：
+    ```bash
+    ontomark mark-processed <project-path>
+    ```
 
-10. **重建索引**：
+### ⑦ 记录
+
+12. **追加 log.md** — 使用 Write 工具在项目根目录 `log.md` 末尾追加操作记录：
+
+    ```markdown
+    ## [2026-06-25] ingest | 文档标题
+
+    type: ingest
+    files: ["raw/article.md"]
+    entities:
+      - + EntityName (Type)
+      - ~ ExistingEntity (updated)
+    status: success
+    ---
+    ```
+
+    > 如果 `log.md` 不存在则自动创建。
+
+13. **重建索引**：
     ```bash
     ontomark index-build <project-path>
     ```
+    `index-build` 会自动更新 `.ontomark/index.json` 和 `wiki/index.md`。
 
-### ⑥ 报告
+### ⑧ 报告
 
-11. 向用户展示输出报告。
+14. 向用户展示输出报告。
 
 ---
 
@@ -174,6 +219,9 @@ OpenAI 的 CEO，在 AI 领域有重要影响。
 |------|------|
 | 文件 ≤ 3 | 逐文件展示提取结果 → 用户确认后写入 |
 | 文件 > 3 | 批量提取 → 展示摘要 → 用户批量确认 |
+| 讨论门：用户确认 | 进入 WikiLinks |
+| 讨论门：用户补充/修正 | 精炼提取后继续 |
+| 讨论门：用户跳过 | 不处理此文件，进入下一个 |
 | 新实体 | 直接新建 |
 | 完全重复 | 跳过 |
 | 新增别名/补充 info | 自动合并 |
