@@ -8,8 +8,6 @@ export interface PendingFilesResult {
   /** 需要处理的 raw 文件列表（相对路径） */
   files: string[];
   total: number;
-  /** ontology 文件是否在此批次中有变更 */
-  ontologyChanged: boolean;
   /** 当前记录的 lastProcessedHash */
   lastHash: string;
 }

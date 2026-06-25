@@ -41,10 +41,8 @@ digraph ingest_flow {
    ```
    返回：
    ```json
-   { "files": ["raw/a.md", "raw/b.md"], "total": 2,
-     "ontologyChanged": false, "lastHash": "abc123" }
+   { "files": ["raw/a.md", "raw/b.md"], "total": 2, "lastHash": "abc123" }
    ```
-   - `ontologyChanged: true` → 询问用户是否全量重处理
    - `files` 为空 → 无待处理，结束流程
 
 ### ② 读取
@@ -111,7 +109,7 @@ digraph ingest_flow {
 
 | 命令 | 作用 | 输出关键字段 |
 |------|------|-------------|
-| `ontomark pending-files <path>` | 待处理文件 | `files[], total, ontologyChanged, lastHash` |
+| `ontomark pending-files <path>` | 待处理文件 | `files[], total, lastHash` |
 | `ontomark mark-processed <path>` | 标记 HEAD 为已处理 | ✅ 确认信息 |
 | `ontomark index-build <path>` | 全量重建索引 | 索引实体数 |
 | `ontomark index-query <path> <name> [--fuzzy]` | 查询实体 | `found, canonical?, type?, path?, aliases?` |
@@ -181,7 +179,6 @@ OpenAI 的 CEO，在 AI 领域有重要影响。
 | 新增别名/补充 info | 自动合并 |
 | info 冲突 | 询问用户 |
 | 类型不匹配 | 询问用户 |
-| `ontologyChanged` | 询问是否全量重处理 |
 | 对话来源 | 默认 `needs_review: true` |
 
 ---

@@ -49,7 +49,6 @@ describe('pending-files', () => {
     expect(result.files).toContain('raw/a.md');
     expect(result.files).toContain('raw/sub/b.md');
     expect(result.files).not.toContain('raw/ignore.txt');
-    expect(result.ontologyChanged).toBe(false);
     expect(result.lastHash).toBeTruthy();
   });
 
@@ -64,7 +63,6 @@ describe('pending-files', () => {
 
     expect(result.total).toBe(0);
     expect(result.files).toEqual([]);
-    expect(result.ontologyChanged).toBe(false);
   });
 
   it('should detect new raw files after a commit', async () => {
@@ -97,23 +95,6 @@ describe('pending-files', () => {
 
     expect(result.total).toBe(1);
     expect(result.files).toEqual(['raw/a.md']);
-  });
-
-  it('should flag ontologyChanged when ontology.yaml changes', async () => {
-    await writeFile('raw/a.md', 'content a');
-    gitCommitAll('first commit');
-
-    const headHash = git('rev-parse HEAD');
-    await writeFile('.ontomark/processed.json', JSON.stringify({ lastProcessedHash: headHash }));
-
-    await writeFile('ontology.yaml', 'entity: test');
-    gitCommitAll('add ontology');
-
-    const result = await pendingFiles(tempDir);
-
-    expect(result.ontologyChanged).toBe(true);
-    // ontology.yaml 本身不应包含在 files 列表中
-    expect(result.files).not.toContain('ontology.yaml');
   });
 
   it('should not detect other authors commits', async () => {

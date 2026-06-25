@@ -16,7 +16,6 @@ describe('V3 Tool Types', () => {
     const result: PendingFilesResult = {
       files: [],
       total: 0,
-      ontologyChanged: false,
       lastHash: '',
     };
     expect(result.total).toBe(0);
