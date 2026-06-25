@@ -2,8 +2,6 @@ import {
   PendingFilesResult,
   WikiStatusResult,
   WikiFileInfo,
-  OntologyStatusResult,
-  WikiWriteInput,
   IndexQueryResult,
   LintOrphansResult,
   LintMissingResult,
@@ -66,95 +64,6 @@ describe('V3 Tool Types', () => {
     };
     expect(result.files).toHaveLength(0);
     expect(result.total).toBe(0);
-  });
-
-  // ============ OntologyStatusResult 测试 ============
-
-  it('should define OntologyStatusResult structure', () => {
-    const result: OntologyStatusResult = {
-      exists: true,
-      path: 'ontology.json',
-      hash: 'def456',
-      lastModified: '2026-06-13T00:00:00Z',
-      entityTypes: {
-        Person: {
-          description: 'A person entity',
-        },
-        Organization: {
-          description: 'An organization entity',
-          template: {
-            summary: 'Default summary',
-            info: [{ key: 'founded', label: 'Founded' }],
-          },
-        },
-      },
-    };
-    expect(result.exists).toBe(true);
-    expect(result.entityTypes['Person'].description).toBe('A person entity');
-    expect(result.entityTypes['Organization'].template?.summary).toBe('Default summary');
-  });
-
-  it('should handle OntologyStatusResult when ontology does not exist', () => {
-    const result: OntologyStatusResult = {
-      exists: false,
-      path: '',
-      hash: '',
-      lastModified: '',
-      entityTypes: {},
-    };
-    expect(result.exists).toBe(false);
-    expect(result.entityTypes).toEqual({});
-  });
-
-  // ============ WikiWriteInput 测试 ============
-
-  it('should define WikiWriteInput structure', () => {
-    const input: WikiWriteInput = {
-      projectPath: '/project',
-      entities: [{
-        canonical: 'Test Entity',
-        type: 'Person',
-        content: 'Test content',
-        sources: [{ file: 'raw/test.md', lines: [1] }],
-        isUpdate: false,
-      }],
-    };
-    expect(input.entities[0].canonical).toBe('Test Entity');
-  });
-
-  it('should handle WikiWriteInput with optional fields', () => {
-    const input: WikiWriteInput = {
-      projectPath: '/project',
-      entities: [{
-        canonical: 'Test Entity',
-        type: 'Person',
-        aliases: ['Alias 1', 'Alias 2'],
-        info: { key1: 'value1', key2: 'value2' },
-        content: 'Test content',
-        sources: [{ file: 'raw/test.md', lines: [1] }],
-        needsReview: true,
-        isUpdate: true,
-      }],
-    };
-    expect(input.entities[0].aliases).toEqual(['Alias 1', 'Alias 2']);
-    expect(input.entities[0].needsReview).toBe(true);
-    expect(input.entities[0].info?.key1).toBe('value1');
-  });
-
-  it('should handle WikiWriteInput without optional fields', () => {
-    const input: WikiWriteInput = {
-      projectPath: '/project',
-      entities: [{
-        canonical: 'Test Entity',
-        type: 'Person',
-        content: 'Test content',
-        sources: [{ file: 'raw/test.md', lines: [1] }],
-        isUpdate: false,
-      }],
-    };
-    expect(input.entities[0].aliases).toBeUndefined();
-    expect(input.entities[0].needsReview).toBeUndefined();
-    expect(input.entities[0].info).toBeUndefined();
   });
 
   // ============ IndexQueryResult 测试 ============
