@@ -159,18 +159,18 @@ _最后更新：2026-06-25 | 共 12 个实体_
 
 ## Actor
 
-- [[Sam Altman]] — OpenAI CEO，AI 安全倡导者 _(2026-06-25)_
-- [[Sidney Crosby]] — NHL 冰球运动员 _(2026-06-24)_
+- [[Sam Altman]] — OpenAI CEO，AI 安全倡导者
+- [[Sidney Crosby]] — NHL 冰球运动员
 
 ## Organization
 
-- [[OpenAI]] — AI 研究与部署公司 _(2026-06-25)_
-- [[Amazon]] — 电商与云计算巨头 _(2026-06-20)_
+- [[OpenAI]] — AI 研究与部署公司
+- [[Amazon]] — 电商与云计算巨头
 
 ## Thing
 
-- [[ChatGPT]] — OpenAI 的 AI 对话助手 _(2026-06-25)_
-- [[DeepSeek-Coder]] — AI 编程工具 _(2026-06-25)_
+- [[ChatGPT]] — OpenAI 的 AI 对话助手
+- [[DeepSeek-Coder]] — AI 编程工具
 ```
 
 ### 生成方式
