@@ -56,6 +56,47 @@ describe('index-build', () => {
     expect(data.entities['Test']).toBeDefined();
   });
 
+  it('should generate index.md with grouped entity structure and footer', async () => {
+    // 创建多个类型的 wiki 文件
+    const personsDir = path.join(wikiDir, 'Persons');
+    const orgsDir = path.join(wikiDir, 'Organizations');
+    await fs.mkdir(personsDir, { recursive: true });
+    await fs.mkdir(orgsDir, { recursive: true });
+
+    await fs.writeFile(
+      path.join(personsDir, 'Alice.md'),
+      '---\ncanonical: Alice\nentity_type: Person\ndescription: A test person\n---\n# Alice\nSome content.'
+    );
+    await fs.writeFile(
+      path.join(personsDir, 'Bob.md'),
+      '---\ncanonical: Bob\nentity_type: Person\ndescription: Another person\n---\n# Bob\nMore content.'
+    );
+    await fs.writeFile(
+      path.join(orgsDir, 'Acme_Corp.md'),
+      '---\ncanonical: Acme Corp\nentity_type: Organization\ndescription: A test company\n---\n# Acme Corp\nCompany details.'
+    );
+
+    await indexBuild(tempDir);
+
+    const indexMd = await fs.readFile(path.join(wikiDir, 'index.md'), 'utf-8');
+
+    // 验证包含实体名
+    expect(indexMd).toContain('Alice');
+    expect(indexMd).toContain('Bob');
+    expect(indexMd).toContain('Acme Corp');
+
+    // 验证按类型分组（按 type 字母序：Organization < Person）
+    const orgSection = indexMd.indexOf('## Organization');
+    const personSection = indexMd.indexOf('## Person');
+    expect(orgSection).toBeGreaterThan(-1);
+    expect(personSection).toBeGreaterThan(-1);
+    expect(personSection).toBeGreaterThan(orgSection);
+
+    // 验证 _最后更新 footer 和实体计数
+    expect(indexMd).toMatch(/_最后更新/u);
+    expect(indexMd).toMatch(/共 3 个实体/u);
+  });
+
   it('should handle empty wiki', async () => {
     const result = await indexBuild(tempDir);
     expect(Object.keys(result.entities)).toHaveLength(0);

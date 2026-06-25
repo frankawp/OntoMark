@@ -14,7 +14,6 @@ interface IndexEntry {
   canonical: string;
   type: string;
   summary: string;
-  updated: string;
 }
 
 /**
@@ -80,7 +79,7 @@ export async function indexBuild(projectPath: string): Promise<IndexData> {
   for (const [canonical, entity] of Object.entries(entities)) {
     const fullPath = path.join(wikiDir, entity.path);
     const summary = await extractSummary(fullPath, canonical);
-    entries.push({ canonical, type: entity.type, summary, updated: '' });
+    entries.push({ canonical, type: entity.type, summary });
   }
 
   // 按 type 分组
