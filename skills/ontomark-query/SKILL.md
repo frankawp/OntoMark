@@ -47,28 +47,49 @@ ontomark wiki-status <project-path>
 
 直接 Read 项目根目录的 `ontology.md` 文件，解析知识维度定义。
 
+## CLI 命令参考
+
+| 命令 | 作用 | 输出关键字段 |
+|------|------|-------------|
+| `ontomark index-build <path>` | 重建索引（含 index.md） | 索引实体数 |
+| `ontomark index-query <path> <name> [--fuzzy]` | 查询实体 | `found, canonical?, type?, path?, aliases?` |
+| `ontomark wiki-status <path>` | wiki 状态 | `files[], total` |
+
 ## 工作流程
 
 ### 第一步：解析问题
 
-1. 分析用户问题，识别涉及的实体/概念
+1. **Read** `ontology.md` → 了解知识维度，帮助理解问题属于哪个领域
+2. 分析用户问题，识别涉及的实体/概念和答案可能的形态
 
 ### 第二步：查询实体
 
-2. 调用 `index-query` → 查询每个实体是否存在
-3. Read → 读取相关实体页面
+3. **Read** `wiki/index.md` → 查看 wiki 全貌，定位相关页面所在的类型分组
+4. 调用 `index-query` → 查询每个实体是否存在：
+   ```bash
+   ontomark index-query <project-path> "<name>" [--fuzzy]
+   ```
+5. **Read** → 读取相关实体页面的完整内容
 
 ### 第三步：生成回答
 
-4. 综合多个实体信息，生成回答
-5. 根据问题类型选择输出格式
+6. 综合多个实体信息，生成回答
+7. 根据问题类型选择输出格式
 
 ### 第四步：展示与存储
 
-6. 向用户展示回答
-7. 询问："这个回答有价值，要存入 wiki 作为 Topic 页面吗？"
+8. 向用户展示回答
+9. 询问："这个回答有价值，要存入 wiki 作为 Topic 页面吗？"
 
-   用户同意 → 使用 Write 工具创建 Topic 页面（参考 ingest 技能的 Markdown 格式），并追加 log.md：
+   用户同意 → 使用 Write 工具创建 Topic 页面（参考 ingest 技能的"实体页面格式"），provenance 记录对话来源：
+
+   ```yaml
+   provenance:
+     - conversation: 2026-06-25
+       summary: 用户查询了 {问题摘要}
+   ```
+
+   并追加 log.md：
 
    ```markdown
    ## [2026-06-25] query | 问题摘要
@@ -92,6 +113,7 @@ ontomark wiki-status <project-path>
 | 对比分析 | Markdown 表格 | `\| 属性 \| A \| B \|` |
 | 关系梳理 | Mermaid 图表 | `graph LR; A --> B` |
 | 事件梳理 | 时间线列表 | `- 2026-01: 事件A` |
+| 综合合成 | 结构化报告 | 跨多个实体的深度分析，含背景、关联、结论 |
 
 ## Topic 页面命名规则
 
