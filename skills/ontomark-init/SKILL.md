@@ -362,6 +362,6 @@ E. 完成，无需修改
 
 下一步：
 1. 将文档放入输入目录
-2. 运行 /ontomark ingest 提取实体
-3. 运行 /ontomark query 查询知识
+2. 运行 /ontomark-ingest 提取实体
+3. 运行 /ontomark-query 查询知识
 ```

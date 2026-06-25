@@ -8,7 +8,12 @@
 你是一个知识提取专家。请从以下文档中提取实体。
 
 ## 实体类型定义
-{此处插入 ontology-status 返回的 entity_types}
+{此处插入 ontology.md 中定义的知识维度列表。每个维度包含：名称、说明、粒度和属性列表。示例格式：
+
+- Actor（行动者）：个人和组织。属性：角色/职位、所属组织、国籍
+- Event（事件）：新闻报道的核心事件。属性：时间、地点、参与方、结果
+- Thing（事物）：被讨论的产品和技术。属性：类型、开发者/创造者、用途
+}
 
 ## 提取策略
 
@@ -39,13 +44,13 @@
 [
   {
     "name": "实体规范名称",
-    "type": "实体类型（必须存在于 entity_types）",
+    "type": "实体类型（必须存在于 ontology.md 的维度中）",
     "aliases": ["别名1", "别名2"],
     "info": {
       "字段1": "值1",
       "字段2": "值2"
     },
-    "context": "实体描述或上下文片段",
+    "context": "实体描述或上下文片段，需标注 WikiLinks",
     "extraction_type": "direct | inferred | summarized"
   }
 ]
@@ -61,44 +66,8 @@
 
 ## 注意事项
 
-1. 所有 type 必须存在于 entity_types 中
+1. 所有 type 必须存在于 ontology.md 定义的知识维度中
 2. name 使用最完整、最规范的名称
 3. aliases 包含文档中出现的其他称呼
-4. info 根据 entity_types 的 template 填充
-5. context 保持原文本片段，便于溯源
-```
-
-## 使用示例
-
-**输入文档：**
-```
-Connor Bedard 在昨晚的比赛中表现出色，帮助球队取得胜利。
-这位 18 岁的新秀已经成为了球队的进攻核心。
-```
-
-**输出：**
-```json
-[
-  {
-    "name": "Connor Bedard",
-    "type": "Person",
-    "aliases": ["Bedard", "这位 18 岁的新秀"],
-    "info": {
-      "age": "18",
-      "role": "进攻核心"
-    },
-    "context": "Connor Bedard 在昨晚的比赛中表现出色，帮助球队取得胜利。",
-    "extraction_type": "direct"
-  },
-  {
-    "name": "昨晚比赛",
-    "type": "Event",
-    "aliases": [],
-    "info": {
-      "date": "昨晚"
-    },
-    "context": "昨晚的比赛中表现出色",
-    "extraction_type": "inferred"
-  }
-]
-```
+4. info 优先填充本维度在 ontology.md 中定义的属性
+5. context 保持原文本片段，便于 WikiLinks 标注和溯源
