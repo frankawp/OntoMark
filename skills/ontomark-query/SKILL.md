@@ -79,9 +79,9 @@ ontomark wiki-status <project-path>
 ### 第四步：展示与存储
 
 8. 向用户展示回答
-9. 询问："这个回答有价值，要存入 wiki 作为 Topic 页面吗？"
+9. 询问："这个回答有价值，要存入 wiki 作为 {知识维度} 页面吗？"
 
-   用户同意 → 使用 Write 工具创建 Topic 页面（参考 ingest 技能的"实体页面格式"），provenance 记录对话来源：
+   用户同意 → 使用 Write 工具创建 {知识维度} 页面（参考 ingest 技能的"实体页面格式"），provenance 记录对话来源：
 
    ```yaml
    provenance:
@@ -96,7 +96,7 @@ ontomark wiki-status <project-path>
 
    type: query
    entities:
-     - + TopicName (Topic)
+     - + Name ({知识维度})
    status: success
    ---
    ```
@@ -115,7 +115,7 @@ ontomark wiki-status <project-path>
 | 事件梳理 | 时间线列表 | `- 2026-01: 事件A` |
 | 综合合成 | 结构化报告 | 跨多个实体的深度分析，含背景、关联、结论 |
 
-## Topic 页面命名规则
+## 对话总结生成的页面命名规则
 
 - 使用用户问题的核心概念作为 canonical
 - 自动关联涉及的实体（WikiLinks）
