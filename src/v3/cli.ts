@@ -9,6 +9,8 @@ import { indexQuery } from './tools/index-query';
 import { lintAll } from './tools/lint-all';
 import { skillInstall, skillUninstall } from './tools/skill-install';
 import { startServer } from './tools/serve';
+import { serveStatus } from './tools/serve-status';
+import { serveStop } from './tools/serve-stop';
 
 const program = new Command();
 
@@ -103,6 +105,22 @@ program
   .action(async (projectPath: string, options: { port?: string; open?: boolean }) => {
     const port = parseInt(options.port || '8080', 10);
     startServer(projectPath, port, !!options.open);
+  });
+
+program
+  .command('serve-status <project-path>')
+  .description('查看 Wiki 预览服务器状态')
+  .action(async (projectPath: string) => {
+    const result = await serveStatus(projectPath);
+    console.log(JSON.stringify(result, null, 2));
+  });
+
+program
+  .command('serve-stop <project-path>')
+  .description('停止 Wiki 预览服务器')
+  .action(async (projectPath: string) => {
+    const result = await serveStop(projectPath);
+    console.log(JSON.stringify(result, null, 2));
   });
 
 program.parse();

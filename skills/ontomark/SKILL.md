@@ -26,6 +26,7 @@ description: OntoMark 知识库入口技能。当用户提到知识库、wiki、
 | 谁/什么/查询/query/列出 | Query | 调用 Skill: `ontomark-query` |
 | 检查/lint/健康/孤立 | Lint | 调用 Skill: `ontomark-lint` |
 | explore/探索/知识点/搜索/了解 | Explore | 调用 Skill: `ontomark-explore` |
+| 启动/停止/重启服务器/预览/serve | Serve | 调用 Skill: `ontomark-serve` |
 
 ## 分发规则
 

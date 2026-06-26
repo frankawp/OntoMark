@@ -217,6 +217,12 @@ export async function startServer(project: string, port: number, openBrowser: bo
   loadIndex();
   setupWatcher(wikiDir);
 
+  // 写入 PID 文件
+  const pidPath = path.join(projectPath, '.ontomark', 'serve.pid');
+  const ontomarkDir = path.join(projectPath, '.ontomark');
+  if (!fs.existsSync(ontomarkDir)) fs.mkdirSync(ontomarkDir, { recursive: true });
+  fs.writeFileSync(pidPath, JSON.stringify({ pid: process.pid, port, started: new Date().toISOString() }));
+
   const server = http.createServer((req, res) => {
     const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
     const pathname = url.pathname;
