@@ -276,6 +276,14 @@ export async function startServer(project: string, port: number, openBrowser: bo
       }
     }
 
+    // 友好提示：log.md 还不存在
+    if (pathname === '/log') {
+      const html = pageHTML('操作日志', '<h1>📋 操作日志</h1><p>暂无操作记录。</p><p>运行 <code>/ontomark ingest</code> 或 <code>/ontomark explore</code> 后，操作日志会自动生成在 <code>log.md</code>。</p><p><a href="/">返回首页</a></p>');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(html);
+      return;
+    }
+
     // 404
     const notFoundHtml = pageHTML('Not Found', '<h1>404</h1><p>页面不存在。</p><a href="/">返回首页</a>');
     res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
